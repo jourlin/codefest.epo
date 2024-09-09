@@ -5,8 +5,11 @@
 1. ```python -m venv .```
 2. ```source bin/activate```
 3. ```pip install -r requirements.txt```
-4. Edit ```config.sh``` to match your local system
-5. ```source config.sh```
+4. Edit ```.env``` to match your local system
+
+## How to run the embedding indexer
+
+```flask reindex "my request"```
 
 ## How to run the web server
 
