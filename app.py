@@ -1,4 +1,7 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, stream_with_context, request
+from markupsafe import escape
+
+import time
 import click
 import warnings
 import os
@@ -38,8 +41,8 @@ def index():
     question = "What are the main kinds of patented devices for healthcare?"
     streaming_response = chat_engine.stream_chat(question)
     for tokens in streaming_response.response_gen:
-        app.logger.info(str(tokens))
-    return render_template('index.html')
+        yield(str(tokens).replace('\n', '<br>'))
+    # return render_template('index.html')
 
 @app.cli.command("textchat")
 def textchat():
@@ -77,11 +80,11 @@ def textchat():
             print(str(tokens),end='', flush=True)
         print()
         print()
+
 @app.cli.command("reindex")
-@click.argument("index_name")
-def reindex(index_name):
+def reindex():
     """Regenerate the Deeplake store."""
-    t=Toolkit(index_name)
+    t=Toolkit()
     t.reindex()
 
     
