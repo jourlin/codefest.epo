@@ -1,4 +1,4 @@
-from flask import Flask, render_template, stream_with_context, request
+from flask import Flask, Response, render_template, stream_template, stream_with_context
 from markupsafe import escape
 
 import time
@@ -7,66 +7,28 @@ import warnings
 import os
 from toolkit import Toolkit
 
-from llama_index.core import Settings, SimpleDirectoryReader, VectorStoreIndex, StorageContext
-from llama_index.core.memory import ChatMemoryBuffer
-from llama_index.embeddings.huggingface import HuggingFaceEmbedding
-from llama_index.llms.ollama import Ollama
-from llama_index.vector_stores.deeplake import DeepLakeVectorStore
-
 app = Flask(__name__)
+
+@app.route('/answer')
+def generate_answer():
+    def update(tokens):
+        yield 'data: open\n\n'
+        for token in tokens:
+            yield f'data: {str(token).replace('\n','<br>')}\n\n'
+        yield 'data: close\n\n'
+
+    app.logger.info("In generation")
+    tokens=Toolkit().patchat("What types of patented dental devices do you know?").response_gen
+    return Response(update(tokens), mimetype='text/event-stream')
 
 @app.route('/')
 def index():
     # warnings.filterwarnings('ignore')
-    t=Toolkit()
-    # embedding model
-    Settings.embed_model = HuggingFaceEmbedding(
-        model_name=t.model_name
-    )
-    # ollama
-    Settings.llm = Ollama(model=t.llm, request_timeout=t.llm_req_timeout)
-    app.logger.info('Loading index from "'+t.vector_dir+"'")
-    vector_store = DeepLakeVectorStore(dataset_path=t.vector_dir)
-    index = VectorStoreIndex.from_vector_store(vector_store=vector_store, streaming=True)
-    app.logger.info('task completed.')
-    memory = ChatMemoryBuffer.from_defaults(token_limit=t.token_limit)
-    chat_engine = index.as_chat_engine(
-        chat_mode="context",
-        memory=memory,
-        system_prompt=(
-            "You are a chatbot, able to have normal interactions, as well as talk"
-            " about patents. Do not invent patent numbers"
-        ),
-    )
-    question = "What are the main kinds of patented devices for healthcare?"
-    streaming_response = chat_engine.stream_chat(question)
-    for tokens in streaming_response.response_gen:
-        yield(str(tokens).replace('\n', '<br>'))
-    # return render_template('index.html')
+    return stream_template('index.html')
 
 @app.cli.command("textchat")
 def textchat():
-    # warnings.filterwarnings('ignore')
-    t=Toolkit()
-    # embedding model
-    Settings.embed_model = HuggingFaceEmbedding(
-        model_name=t.model_name
-    )
-    # ollama
-    Settings.llm = Ollama(model=t.llm, request_timeout=t.llm_req_timeout)
-    print('Loading index from "'+t.vector_dir+"'")
-    vector_store = DeepLakeVectorStore(dataset_path=t.vector_dir)
-    index = VectorStoreIndex.from_vector_store(vector_store=vector_store, streaming=True)
-    print('task completed.')
-    memory = ChatMemoryBuffer.from_defaults(token_limit=t.token_limit)
-    chat_engine = index.as_chat_engine(
-        chat_mode="context",
-        memory=memory,
-        system_prompt=(
-            "You are a chatbot, able to have normal interactions, as well as talk"
-            " about patents. Do not make up patent numbers."
-        ),
-    )
+    t = Toolkit()
     while True:
         print("How can I help ? (type 'bye' to quit.)")
         question = input("> ")
@@ -74,7 +36,7 @@ def textchat():
         if question == "bye":
             print("Bye. Looking forward talking with you again !")
             break
-        streaming_response = chat_engine.stream_chat(question)
+        streaming_response = t.patchat(question)
         print()
         for tokens in streaming_response.response_gen:
             print(str(tokens),end='', flush=True)
@@ -87,4 +49,5 @@ def reindex():
     t=Toolkit()
     t.reindex()
 
-    
+if __name__ == '__main__':
+    app.run(debug=True, threaded=True)

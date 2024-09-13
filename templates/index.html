@@ -5,6 +5,37 @@
     <title>Patent RAG Chatbot</title>
 </head>
 <body>
-   <h1>Welcome to Patent RAG Chatbot!</h1>
+    <h1>Welcome to Patent RAG Chatbot!</h1>
+    <div id="response"></div>
+    <script>
+        let eventSource;
+        function start(){
+            
+            if (!window.EventSource) {
+            // IE or an old browser
+            alert("The browser doesn't support EventSource.");
+            }
+            var target_output = document.getElementById("response");
+            var answer_source = new EventSource("/answer");
+
+            answer_source.onmessage = function (e) {
+                if (e.data == "open"){
+                    target_output.innerHTML +="<hr>";
+                }
+                else if (e.data == "close") {
+                    target_output.innerHTML +="<hr>";
+                    answer_source.close();
+                } else {
+                    target_output.innerHTML +=e.data;
+                }
+            };
+        }
+        function stop() { // when "Stop" button pressed
+            answer_source.close();
+        }
+</script>
+<hr>
+<button onclick="start()">Start</button> Press the "Start" to begin.
+<button onclick="stop()">Stop</button> "Stop" to finish.
 </body>
 </html>
