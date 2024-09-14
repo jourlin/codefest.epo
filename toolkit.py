@@ -11,7 +11,7 @@ from llama_index.core.memory import ChatMemoryBuffer
 
 class Toolkit:
     
-    def __init__(self):
+    def __init__(self, read_only=False):
         self.query=os.getenv('SEARCH_TERM')
         self.model_name=os.getenv('MODEL_NAME')
         self.match_all=os.getenv('MATCH_ALL')
@@ -33,14 +33,14 @@ class Toolkit:
         self.llm_settings = Ollama(model=self.llm, request_timeout=self.llm_req_timeout)
         Settings.llm = self.llm_settings
         self.vector_store = DeepLakeVectorStore(dataset_path=self.vector_dir)
-        self.index = VectorStoreIndex.from_vector_store(vector_store=self.vector_store, streaming=True)
+        self.index = VectorStoreIndex.from_vector_store(vector_store=self.vector_store, streaming=True, read_only=read_only)
         self.memory = ChatMemoryBuffer.from_defaults(token_limit=self.token_limit)
         self.chat_engine = self.index.as_chat_engine(
             chat_mode="context",
             memory=self.memory,
             system_prompt=(
                 "You are a chatbot, able to have normal interactions, as well as talk"
-                " about patents. Do not invent patent numbers"
+                " about patents. Do not invent patent numbers."
             ),
         )
         self.storage_context = StorageContext.from_defaults(vector_store=self.vector_store)

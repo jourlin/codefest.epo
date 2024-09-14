@@ -1,3 +1,8 @@
+# Note : 
+- The following instructions were tested successfully with the followings specs :
+- Ubuntu 24.04 LTS
+- Nvidia GPU with at least 6Gb VRAM (A3000 & 3060)
+
 # How to install Flask server
 
 ## Commands to run in your linux terminal

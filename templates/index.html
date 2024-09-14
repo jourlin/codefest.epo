@@ -3,39 +3,45 @@
 <head>
     <meta charset="UTF-8">
     <title>Patent RAG Chatbot</title>
+    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
 </head>
 <body>
     <h1>Welcome to Patent RAG Chatbot!</h1>
+    <div id="content"></div>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <div id="response"></div>
+    <div id="waiter" style="display: none"><i>Please wait...</i></div>
     <script>
         let eventSource;
         function start(){
-            
+            document.getElementById("waiter").style.display = "block";
             if (!window.EventSource) {
             // IE or an old browser
             alert("The browser doesn't support EventSource.");
             }
-            var target_output = document.getElementById("response");
-            var answer_source = new EventSource("/answer");
 
+            var target_output = document.getElementById("response");
+            var waiter = document.getElementById("waiter");
+
+            var answer_source = new EventSource("/answer");
             answer_source.onmessage = function (e) {
                 if (e.data == "open"){
                     target_output.innerHTML +="<hr>";
+                    waiter.style.display = "block";
                 }
                 else if (e.data == "close") {
                     target_output.innerHTML +="<hr>";
+                    waiter.style.display = "none";
                     answer_source.close();
                 } else {
                     target_output.innerHTML +=e.data;
+                    window.scrollTo(0, document.body.scrollHeight);
                 }
             };
         }
-        function stop() { // when "Stop" button pressed
-            answer_source.close();
-        }
 </script>
 <hr>
-<button onclick="start()">Start</button> Press the "Start" to begin.
-<button onclick="stop()">Stop</button> "Stop" to finish.
+<button type="button" onclick="start()">Start</button> Click to Start
+<button type="button" onclick="stop()">Stop</button> "Stop" to finish.
 </body>
 </html>
