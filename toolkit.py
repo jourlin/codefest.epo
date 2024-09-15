@@ -47,6 +47,11 @@ class Toolkit:
         os.system("mkdir -p "+self.document_dir)
         os.system("mkdir -p "+self.vector_dir)
 
+    def retrieve(self, query):
+        store = deeplake.core.vectorstore.deeplake_vectorstore.DeepLakeVectorStore(path=self.vector_dir)
+        result=store.search(embedding_data=query, embedding_function=self.embed_model.get_text_embedding)
+        return result
+
     def reindex(self):
         print(f"Reindexing '{self.query}'...")
         file_list = os.popen("grep -i -l '"+self.query+"' "+self.document_dir+"/*.xml").read()

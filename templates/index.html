@@ -7,8 +7,6 @@
 </head>
 <body>
     <h1>Welcome to Patent RAG Chatbot!</h1>
-    <div id="content"></div>
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <div id="response"></div>
     <div id="waiter" style="display: none"><i>Please wait...</i></div>
     <script>
@@ -22,15 +20,15 @@
 
             var target_output = document.getElementById("response");
             var waiter = document.getElementById("waiter");
-
-            var answer_source = new EventSource("/answer");
+            query = document.getElementById("query").value
+            var answer_source = new EventSource("/answer?query="+ encodeURIComponent(query));
             answer_source.onmessage = function (e) {
                 if (e.data == "open"){
-                    target_output.innerHTML +="<hr>";
+                    target_output.innerHTML +="<hr><br/>";
                     waiter.style.display = "block";
                 }
                 else if (e.data == "close") {
-                    target_output.innerHTML +="<hr>";
+                    target_output.innerHTML +="<br/><hr>";
                     waiter.style.display = "none";
                     answer_source.close();
                 } else {
@@ -41,7 +39,10 @@
         }
 </script>
 <hr>
-<button type="button" onclick="start()">Start</button> Click to Start
-<button type="button" onclick="stop()">Stop</button> "Stop" to finish.
+<form method="post">
+<label for="query">Your query:</label>
+<input type="search" id="query" name="query" required />
+<button type="button" onclick="start()">Submit</button>
+</form>
 </body>
 </html>
