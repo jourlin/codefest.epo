@@ -36,9 +36,7 @@ def generate_answer():
     t = Toolkit(read_only=True)
 
     search_results = t.retrieve(query)
-    for offset in range(0, len(search_results['score'])):
-        print(search_results['metadata'][offset]['file_path'])
-
+    print(search_results)
     tokens=t.patchat(query).response_gen
     return Response(update(tokens), mimetype='text/event-stream')
 

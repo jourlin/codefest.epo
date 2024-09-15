@@ -1,5 +1,5 @@
 import os 
-from bs4 import BeautifulSoup
+import lxml.etree as ET
 from tqdm import tqdm
 import deeplake
 
@@ -24,6 +24,7 @@ class Toolkit:
         self.document_dir=os.getenv('DOC_DIR')
         self.vector_dir=os.getenv('VEC_DIR')
         self.tmp_dir=os.getenv('TMP_DIR')
+        self.span_top_k = 20 # Number of passages to be retrieved in DeepLake store
         # embedding model
         self.embed_model = HuggingFaceEmbedding(
             model_name=self.model_name
@@ -49,7 +50,19 @@ class Toolkit:
 
     def retrieve(self, query):
         store = deeplake.core.vectorstore.deeplake_vectorstore.DeepLakeVectorStore(path=self.vector_dir)
-        result=store.search(embedding_data=query, embedding_function=self.embed_model.get_text_embedding)
+        result = store.search(embedding_data=query, embedding_function=self.embed_model.get_text_embedding, k=self.span_top_k)
+        docname_list = {result['metadata'][offset]['file_path'] for offset in range(0, len(result['metadata']))} 
+        result=[]
+        for doc in docname_list:
+            root=ET.parse(doc).getroot()
+            id=root.xpath('//ep-patent-document')[0].get('id')
+            date=root.xpath('//ep-patent-document')[0].get('date-publ')
+            year=date[:4]
+            month=date[4:6]
+            day=date[6:8]
+            date = day+'/'+month+"/"+year
+            category=root.xpath('//B540/B542/text()')[1]
+            result+=[(id, date, category)]
         return result
 
     def reindex(self):
