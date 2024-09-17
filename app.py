@@ -16,6 +16,16 @@ def favicon():
     return send_from_directory(os.path.join(app.root_path, 'static'),
         'favicon.ico',mimetype='image/vnd.microsoft.icon')
 
+@app.route('/search', methods = ['POST', 'GET'])
+def search():
+    if request.method == 'POST':
+      query = request.form['query']
+    else:
+      query = request.args.get('query')
+    t = Toolkit(read_only=True)
+    search_results = t.retrieve(query)
+    return Response(search_results, mimetype='text/html')
+
 @app.route('/answer', methods = ['POST', 'GET'])
 def generate_answer():
     def render(token, is_start=True):
@@ -34,9 +44,6 @@ def generate_answer():
       query = request.args.get('query')
     app.logger.info(f"Answering: '{query}'")
     t = Toolkit(read_only=True)
-
-    search_results = t.retrieve(query)
-    print(search_results)
     tokens=t.patchat(query).response_gen
     return Response(update(tokens), mimetype='text/event-stream')
 

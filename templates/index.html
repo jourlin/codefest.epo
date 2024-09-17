@@ -2,16 +2,33 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Patent RAG Chatbot</title>
+    <title>PatChat</title>
     <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <style>
+        table {
+          font-family: arial, sans-serif;
+          border-collapse: collapse;
+          width: 100%;
+        }
+        
+        td, th {
+          border: 1px solid #dddddd;
+          text-align: left;
+          padding: 8px;
+        }
+        
+        tr:nth-child(even) {
+          background-color: #dddddd;
+        }
+    </style>
 </head>
 <body>
-    <h1>Welcome to Patent RAG Chatbot!</h1>
+    <h1>Welcome to PatChat : a Patent retriever and RAG chatbot</h1>
     <div id="response"></div>
     <div id="waiter" style="display: none"><i>Please wait...</i></div>
     <script>
         let eventSource;
-        function start(){
+        function chat(){
             document.getElementById("waiter").style.display = "block";
             if (!window.EventSource) {
             // IE or an old browser
@@ -37,12 +54,36 @@
                 }
             };
         }
+        function search(){
+            var target_output = document.getElementById("response");
+            var waiter = document.getElementById("waiter");
+            query = document.getElementById("query").value
+            const xhr = new XMLHttpRequest();
+            waiter.style.display = "block";
+            xhr.open("GET", "/search?query="+encodeURIComponent(query), true);
+            xhr.onload = (e) => {
+            if (xhr.readyState === 4) {
+                if (xhr.status === 200) {
+                    target_output.innerHTML=xhr.responseText;
+                } else {
+                    target_output.innerHTML=xhr.statusText;
+                }
+                waiter.style.display = "none";
+            }
+            };
+            xhr.onerror = (e) => {
+                target_output.innerHTML=xhr.statusText;
+                waiter.style.display = "none";
+            };
+            xhr.send(null);
+        }
 </script>
 <hr>
 <form method="post">
 <label for="query">Your query:</label>
 <input type="search" id="query" name="query" required />
-<button type="button" onclick="start()">Submit</button>
+<button type="button" onclick="search()">Search</button>
+<button type="button" onclick="chat()">Chat</button>
 </form>
 </body>
 </html>

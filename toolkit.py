@@ -52,7 +52,7 @@ class Toolkit:
         store = deeplake.core.vectorstore.deeplake_vectorstore.DeepLakeVectorStore(path=self.vector_dir)
         result = store.search(embedding_data=query, embedding_function=self.embed_model.get_text_embedding, k=self.span_top_k)
         docname_list = {result['metadata'][offset]['file_path'] for offset in range(0, len(result['metadata']))} 
-        result=[]
+        result="<table><tr><th>ID</th><th>Published</th><th>Category</th></tr>\n"
         for doc in docname_list:
             root=ET.parse(doc).getroot()
             id=root.xpath('//ep-patent-document')[0].get('id')
@@ -62,7 +62,8 @@ class Toolkit:
             day=date[6:8]
             date = day+'/'+month+"/"+year
             category=root.xpath('//B540/B542/text()')[1]
-            result+=[(id, date, category)]
+            result+=f"<tr><td>{id}</td><td>{date}</td><td>{category}</td></tr>\n"
+        result+="</table>\n"
         return result
 
     def reindex(self):
