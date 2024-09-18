@@ -24,6 +24,8 @@ class Toolkit:
         self.document_dir=os.getenv('DOC_DIR')
         self.vector_dir=os.getenv('VEC_DIR')
         self.tmp_dir=os.getenv('TMP_DIR')
+        self.table_cells_maxchars=int(os.getenv('TABLE_CELLS_MAXCHARS'))
+
         self.span_top_k = 20 # Number of passages to be retrieved in DeepLake store
         # embedding model
         self.embed_model = HuggingFaceEmbedding(
@@ -52,9 +54,12 @@ class Toolkit:
         store = deeplake.core.vectorstore.deeplake_vectorstore.DeepLakeVectorStore(path=self.vector_dir)
         result = store.search(embedding_data=query, embedding_function=self.embed_model.get_text_embedding, k=self.span_top_k)
         docname_list = {result['metadata'][offset]['file_path'] for offset in range(0, len(result['metadata']))} 
-        result="<table><tr><th>ID</th><th>Published</th><th>Category</th></tr>\n"
+        result="<table><tr><th>ID</th><th>Published</th><th>Classification CPC</th><th>Short Desc.</th></tr>\n"
         for doc in docname_list:
-            root=ET.parse(doc).getroot()
+            try:
+                root=ET.parse(doc).getroot()
+            except:
+                continue
             id=root.xpath('//ep-patent-document')[0].get('id')
             date=root.xpath('//ep-patent-document')[0].get('date-publ')
             year=date[:4]
@@ -62,7 +67,13 @@ class Toolkit:
             day=date[6:8]
             date = day+'/'+month+"/"+year
             category=root.xpath('//B540/B542/text()')[1]
-            result+=f"<tr><td>{id}</td><td>{date}</td><td>{category}</td></tr>\n"
+            short=root.xpath('//description/heading[text()="SUMMARY"]')
+            if len(short)>0:
+                short=short[0].getnext().xpath('text()')[0][:self.table_cells_maxchars]+'<a href="'+doc.strip(".xml")+".pdf"+'">[...]</a>'
+            else:
+                short="..."
+        
+            result+=f"<tr><td>{id}</td><td>{date}</td><td>{category}</td><td>{short}</td></tr>\n"
         result+="</table>\n"
         return result
 
