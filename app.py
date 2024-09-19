@@ -33,6 +33,16 @@ def search():
     search_results = t.retrieve(query)
     return Response(search_results, mimetype='text/html')
 
+@app.route('/extend', methods = ['POST', 'GET'])
+def extend():
+    if request.method == 'POST':
+      query = request.form['query']
+    else:
+      query = request.args.get('query')
+    t = Toolkit(read_only=True)
+    search_results = t.extend(query)
+    return Response(search_results, mimetype='text/html')
+
 @app.route('/answer', methods = ['POST', 'GET'])
 def generate_answer():
     def render(token, is_start=True):
@@ -77,10 +87,11 @@ def textchat():
         print()
 
 @app.cli.command("reindex")
-def reindex():
+@click.argument("index_name")
+def reindex(index_name):
     """Regenerate the Deeplake store."""
     t=Toolkit()
-    t.reindex()
+    t.reindex(index_name)
 
 if __name__ == '__main__':
     app.run(debug=True, threaded=True)

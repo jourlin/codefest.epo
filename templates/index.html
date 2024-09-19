@@ -78,11 +78,35 @@
             };
             xhr.send(null);
         }
+        function extend(){
+            var target_output = document.getElementById("response");
+            var waiter = document.getElementById("waiter");
+            query = document.getElementById("query").value
+            const xhr = new XMLHttpRequest();
+            waiter.style.display = "block";
+            xhr.open("GET", "/extend?query="+encodeURIComponent(query), true);
+            xhr.onload = (e) => {
+            if (xhr.readyState === 4) {
+                if (xhr.status === 200) {
+                    target_output.innerHTML=xhr.responseText;
+                } else {
+                    target_output.innerHTML=xhr.statusText;
+                }
+                waiter.style.display = "none";
+            }
+            };
+            xhr.onerror = (e) => {
+                target_output.innerHTML=xhr.statusText;
+                waiter.style.display = "none";
+            };
+            xhr.send(null);
+        }
 </script>
 <hr>
 <form method="post">
 <label for="query">Your query:</label>
 <input type="search" id="query" name="query" required />
+<button type="button" onclick="extend()">Extend</button>
 <button type="button" onclick="search()">Search</button>
 <button type="button" onclick="chat()">Chat</button>
 </form>

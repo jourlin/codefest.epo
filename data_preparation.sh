@@ -19,7 +19,9 @@ grep '|ENG|' 2024AA/META/MRCONSO.RRF| cut -d '|' -f1,15 |tr '|' '\t' | sort > cu
 while read -r cui str
 do
   mkdir -p  ${cui::4}
-  echo $str >> ${cui::4}/$cui.txt
+  echo $str | tr '[:upper:]' '[:lower:]'>> /tmp/$cui.txt
+  sort -u /tmp/$cui.txt > ${cui::4}/$cui.txt
+  rm /tmp/$cui.txt
 done < cui_str.tsv
 rm cui_str.tsv
 rm -fr 2024AA
