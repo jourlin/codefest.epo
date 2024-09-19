@@ -69,7 +69,7 @@ class Toolkit:
             category=root.xpath('//B540/B542/text()')[1]
             short=root.xpath('//description/heading[text()="SUMMARY"]')
             if len(short)>0:
-                short=short[0].getnext().xpath('text()')[0][:self.table_cells_maxchars]+'<a href="'+doc.strip(".xml")+".pdf"+'">[...]</a>'
+                short=short[0].getnext().xpath('text()')[0][:self.table_cells_maxchars]+'<a href="/download/'+os.path.basename(doc).strip(".xml")+".pdf"+'">[...]</a>'
             else:
                 short="..."
         

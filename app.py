@@ -10,6 +10,13 @@ from toolkit import Toolkit
 
 app = Flask(__name__)
 
+@app.route("/download/<filename>")
+def download(filename):
+    workingdir = os.path.abspath(os.getcwd())
+    filepath = workingdir + '/documents/'
+    print(filepath, filename)
+    return send_from_directory(filepath, filename)
+
 @app.route('/favicon.ico')
 def favicon():
     app.logger.info("Path: "+os.path.join(app.root_path, 'static'))
