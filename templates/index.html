@@ -21,24 +21,67 @@
         tr:nth-child(even) {
           background-color: #dddddd;
         }
+        button {
+        background-color: #e1ecf4;
+        border-radius: 3px;
+        border: 1px solid #7aa7c7;
+        box-shadow: rgba(255, 255, 255, .7) 0 1px 0 0 inset;
+        box-sizing: border-box;
+        color: #39739d;
+        cursor: pointer;
+        display: inline-block;
+        font-family: -apple-system,system-ui,"Segoe UI","Liberation Sans",sans-serif;
+        font-size: 13px;
+        font-weight: 400;
+        line-height: 1.15385;
+        margin: 0;
+        outline: none;
+        padding: 8px .8em;
+        position: relative;
+        text-align: center;
+        text-decoration: none;
+        user-select: none;
+        -webkit-user-select: none;
+        touch-action: manipulation;
+        vertical-align: baseline;
+        white-space: nowrap;
+        }
+        button:hover,
+        button:focus {
+        background-color: #b3d3ea;
+        color: #2c5777;
+        }
+        button:focus {
+        box-shadow: 0 0 0 4px rgba(0, 149, 255, .15);
+        }
+        button:active {
+        background-color: #a0c7e4;
+        box-shadow: none;
+        color: #2c5777;
+        }
     </style>
 </head>
 <body>
-    <h1 align="center">Welcome to PatChat : a Patent retriever and RAG chatbot</h1>
+    <h1 style="text-align:center">Welcome to PatChat : a Patent retriever and RAG chatbot</h1>
     <div id="response"></div>
     <div id="waiter" style="display: none"><i>Please wait...</i></div>
     <script>
         let eventSource;
+        function remove_concepts() {
+            var target_output = document.getElementById("query");
+            target_output.value=target_output.value.replace(/ c[0-9]+/g,"");
+        }
         function chat(){
             document.getElementById("waiter").style.display = "block";
             if (!window.EventSource) {
             // IE or an old browser
             alert("The browser doesn't support EventSource.");
             }
-
             var target_output = document.getElementById("response");
             var waiter = document.getElementById("waiter");
-            query = document.getElementById("query").value
+            var query_input = document.getElementById("query");
+            remove_concepts();
+            query = query_input.value
             var answer_source = new EventSource("/answer?query="+ encodeURIComponent(query));
             answer_source.onmessage = function (e) {
                 if (e.data == "open"){
@@ -48,6 +91,7 @@
                 else if (e.data == "close") {
                     target_output.innerHTML +="<br/><hr>";
                     waiter.style.display = "none";
+                    query_input.value=""
                     answer_source.close();
                 } else {
                     target_output.innerHTML +=e.data;
@@ -101,14 +145,25 @@
             };
             xhr.send(null);
         }
+
+        function append_query(concept) {
+            var target_output = document.getElementById("query");
+            if (concept.checked) {
+                target_output.value+=" "+concept.id
+            } else {
+                target_output.value=target_output.value.replace(" "+concept.id,"")
+            }
+        }
 </script>
 <hr>
 <form method="post">
-<label for="query">Your query:</label>
-<input type="search" id="query" name="query" required />
-<button type="button" onclick="extend()">Extend</button>
-<button type="button" onclick="search()">Search</button>
-<button type="button" onclick="chat()">Chat</button>
+<div style="text-align: center">
+    <input type="search" id="query" name="query" size="100" placeholder="Type your query here" required /></form></body>
+    <br>
+    <button type="button" onclick="extend()">Extend</button>
+    <button type="button" onclick="search()">Search</button>
+    <button type="button" onclick="chat()">Chat</button>
+</div>
 </form>
 </body>
 </html>

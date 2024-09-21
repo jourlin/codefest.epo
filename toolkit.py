@@ -1,18 +1,21 @@
 import os 
 import sys
 import lxml.etree as ET
+from html2text import html2text
 from tqdm import tqdm
 import deeplake
-
+import re
 from llama_index.core import Settings, SimpleDirectoryReader, VectorStoreIndex, StorageContext
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from llama_index.llms.ollama import Ollama
 from llama_index.vector_stores.deeplake import DeepLakeVectorStore
 from llama_index.core.memory import ChatMemoryBuffer
 
+concept_pattern = re.compile("^c[0-9]+$")
+
 class Toolkit:
     
-    def __init__(self, read_only=False):
+    def __init__(self, read_only=False, index_name="BOTH"):
         self.query=os.getenv('SEARCH_TERM')
         self.model_name=os.getenv('MODEL_NAME')
         self.match_all=os.getenv('MATCH_ALL')
@@ -37,14 +40,22 @@ class Toolkit:
         # ollama
         self.llm_settings = Ollama(model=self.llm, request_timeout=self.llm_req_timeout)
         Settings.llm = self.llm_settings
-        self.umls_vector_store = DeepLakeVectorStore(dataset_path=self.umls_vector_dir)
-        self.umls_index = VectorStoreIndex.from_vector_store(vector_store=self.umls_vector_store, streaming=True, read_only=read_only)
-        self.umls_storage_context = StorageContext.from_defaults(vector_store=self.umls_vector_store)
-        
-        self.vector_store = DeepLakeVectorStore(dataset_path=self.vector_dir)
-        self.index = VectorStoreIndex.from_vector_store(vector_store=self.vector_store, streaming=True, read_only=read_only)
-        self.memory = ChatMemoryBuffer.from_defaults(token_limit=self.token_limit)
-        self.chat_engine = self.index.as_chat_engine(
+        accepted_names = ["UMLS", "EP", "BOTH"]
+        if index_name not in accepted_names:
+            print(f"Error: '{index_name}' is not a valid index name. Accepted values : {accepted_names}", file=sys.stderr)
+            sys.exit(-1)
+        if index_name=="UMLS" or index_name=="BOTH":
+            # Configure deeplake for UMLS
+            self.umls_vector_store = DeepLakeVectorStore(dataset_path=self.umls_vector_dir)
+            self.umls_index = VectorStoreIndex.from_vector_store(vector_store=self.umls_vector_store, streaming=True, read_only=read_only)
+            self.umls_storage_context = StorageContext.from_defaults(vector_store=self.umls_vector_store)
+        if index_name=="EP" or index_name=="BOTH": 
+            # Configure deeplake for patents
+            self.vector_store = DeepLakeVectorStore(dataset_path=self.vector_dir)
+            self.index = VectorStoreIndex.from_vector_store(vector_store=self.vector_store, streaming=True, read_only=read_only)
+            self.storage_context = StorageContext.from_defaults(vector_store=self.vector_store)
+            self.memory = ChatMemoryBuffer.from_defaults(token_limit=self.token_limit)
+            self.chat_engine = self.index.as_chat_engine(
             chat_mode="context",
             memory=self.memory,
             system_prompt=(
@@ -52,15 +63,16 @@ class Toolkit:
                 " about patents. Do not invent patent numbers."
             ),
         )
-        self.storage_context = StorageContext.from_defaults(vector_store=self.vector_store)
+        
         os.system("mkdir -p "+self.document_dir)
         os.system("mkdir -p "+self.vector_dir)
 
     def retrieve(self, query):
+        query = self.expand_query(query)
         store = deeplake.core.vectorstore.deeplake_vectorstore.DeepLakeVectorStore(path=self.vector_dir)
         result = store.search(embedding_data=query, embedding_function=self.embed_model.get_text_embedding, k=self.span_top_k)
         docname_list = {result['metadata'][offset]['file_path'] for offset in range(0, len(result['metadata']))} 
-        result="<table><tr><th>ID</th><th>Published</th><th>Classification CPC</th><th>Short Desc.</th></tr>\n"
+        result="<table><tr><th>select</th><th>ID</th><th>Published</th><th>Classification CPC</th><th>Short Desc.</th></tr>\n"
         for doc in docname_list:
             try:
                 root=ET.parse(doc).getroot()
@@ -75,19 +87,53 @@ class Toolkit:
             category=root.xpath('//B540/B542/text()')[1]
             short=root.xpath('//description/heading[text()="SUMMARY"]')
             if len(short)>0:
-                short=short[0].getnext().xpath('text()')[0][:self.table_cells_maxchars]+'<a href="/download/'+os.path.basename(doc).strip(".xml")+".pdf"+'">[...]</a>'
+                short=short[0].getnext().xpath('text()')[0][:self.table_cells_maxchars]+'...'
             else:
                 short="..."    
-            result+=f"<tr><td>{id}</td><td>{date}</td><td>{category}</td><td>{short}</td></tr>\n"
+            result+='<tr>'
+            result+="<td>"+'<input type="checkbox" id="'+id+'" onchange="append_query(this)" ></td>'
+            result+='<td><a href="/download/'+os.path.basename(doc).strip(".xml")+'.pdf"'+f">{id}</a></td><td>{date}</td><td>{category}</td><td>{short}</td></tr>\n"
         result+="</table>\n"
         return result
 
     def extend(self, query):
         store = deeplake.core.vectorstore.deeplake_vectorstore.DeepLakeVectorStore(path=self.umls_vector_dir)
         result = store.search(embedding_data=query, embedding_function=self.embed_model.get_text_embedding, k=self.span_top_k)
-        result="<table><tr><th>ID</th><th>synonyms</th></tr>\n"
-        result+="</table>\n"
-        return result
+        concept_list = [result['metadata'][offset]['file_name'] for offset in range(0, len(result['metadata']))]
+        content_list = [result['text'][offset] for offset in range(0, len(result['text']))]
+        output="<table><tr><th>select</th><th>concept</th><th>alternatives</th></tr>\n"
+        num_lines=0
+        for offset in range(0, len(result['text'])):
+            num_lines+=1
+            if num_lines > int(os.getenv('MAXNUM_DISPLAYED_CONCEPTS'))+1:
+                break
+            forms= [html2text(x) for x in content_list[offset].split("\n") if x !="" and len(x)<int(os.getenv('MAX_LEN_FOR_CONCEPT_DESC'))]
+            forms = sorted(list(filter(lambda f: len(f)>3, forms)))
+            if len(forms)<=0: # skip if concept has no form
+                continue
+            concept_id = concept_list[offset].strip(".txt")
+            output+="<tr>"
+            output+="<td>"+'<input type="checkbox" id="'+concept_id+'" onchange="append_query(this)" ></td>'
+            output+='<td><b>'+forms[0]+"</b></td><td>"+" ; ".join(forms)+"</td>"
+            output+="</tr>"
+        output+="</table>\n"
+        return output
+    
+    def filter_query(self, query):
+        terms=query.split()
+        filtered = list(filter(lambda t: not concept_pattern.match(t), terms))
+        return " ".join(filtered)
+    
+    def expand_query(self, query):
+        terms=query.split()
+        concepts = list(filter(lambda t: concept_pattern.match(t), terms))
+        filtered = list(filter(lambda t: not concept_pattern.match(t), terms))
+        query = " ".join(filtered)
+        for concept in concepts:
+            with open("umls/"+concept[:4]+"/"+concept+".txt") as f:
+                content = f.readlines()
+            query+=" "+html2text(" ".join(content)).replace('\n', ' ')
+        return query
 
     def reindex(self, index_name):
         if index_name == "EP":
@@ -103,7 +149,7 @@ class Toolkit:
                 if len(fn)>0:
                     os.system("cp "+fn+" "+self.tmp_dir)
             # Load documents and build index
-            documents = SimpleDirectoryReader(self.tmp_dir).load_data()
+            documents = SimpleDirectoryReader(self.tmp_dir).load_data(num_workers=int(os.getenv('NUM_WORKERS')))
             # embedding model
             Settings.embed_model = self.embed_model
             # ollama
@@ -114,10 +160,10 @@ class Toolkit:
             )
             print("Indexing patents completed...")
         elif index_name == "UMLS":
-            print(f"Reindexing '{self.query}'...")
+            print(f"Reindexing UMLS...")
             os.system("mkdir -p "+self.umls_vector_dir)
             # Load documents and build index
-            concepts = SimpleDirectoryReader(self.umls_document_dir).load_data()
+            concepts = SimpleDirectoryReader(self.umls_document_dir, recursive=True).load_data(num_workers=int(os.getenv('NUM_WORKERS')))
             # embedding model
             Settings.embed_model = self.embed_model
             # ollama
@@ -131,6 +177,8 @@ class Toolkit:
             print("Error : Invalid index name. Choose 'EP' for patents or 'UMLS' for concepts", file=sys.stderr)
 
     def patchat(self, question):
+        question = self.filter_query(question)
+        print(f"Answering '{question}'")
         streaming_response = self.chat_engine.stream_chat(question)
         return streaming_response
 

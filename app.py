@@ -71,7 +71,7 @@ def index():
 
 @app.cli.command("textchat")
 def textchat():
-    t = Toolkit()
+    t = Toolkit(read_only=True)
     while True:
         print("How can I help ? (type 'bye' to quit.)")
         question = input("> ")
@@ -90,7 +90,7 @@ def textchat():
 @click.argument("index_name")
 def reindex(index_name):
     """Regenerate the Deeplake store."""
-    t=Toolkit()
+    t=Toolkit(read_only=False, index_name=index_name)
     t.reindex(index_name)
 
 if __name__ == '__main__':

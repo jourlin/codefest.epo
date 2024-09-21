@@ -10,7 +10,7 @@ The downloading of UMLS data is free of charge, but requires to obtain a licence
 Details are given here :
 https://www.nlm.nih.gov/research/umls/index.html
 The only required file is located here :
-https://download.nlm.nih.gov/umls/kss/2024AA/umls-2024AA-mrconso.zip
+https://download.nlm.nih.gov/umls/kss/2024AA/umls-2024AA-metathesaurus-full.zip
 
 # Data preparation
 Execute ```sh data_preparation.sh``̀in the project's root directory to extract :
