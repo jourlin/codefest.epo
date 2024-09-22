@@ -6,13 +6,8 @@ You might need to adapt some parts to fit your computer and its operating system
 
 # Download latest release
 
-1. 
+* visit https://github.com/jourlin/codefest.epo/releases and download ```codefest.epo-X.Y.zip``` where X and Y are respectively the version and subversion numbers of the latest release.
 
-## Step by step installation
-
-*warning*: All instructions are given for installation on a Ubuntu 24.04 LTS operating system, with 32Gb RAM and 6Gb VRAM Nvidia GPU. They probably need to be adapted for different operating systems or machine specifications.
-
-1. Download latest release of the sofware :
 # How to install Flask server
 
 ## Commands to run in your linux terminal
