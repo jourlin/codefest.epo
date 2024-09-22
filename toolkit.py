@@ -16,6 +16,7 @@ concept_pattern = re.compile("^c[0-9]+$")
 class Toolkit:
     
     def __init__(self, read_only=False, index_name="BOTH"):
+        global app
         self.query=os.getenv('SEARCH_TERM')
         self.model_name=os.getenv('MODEL_NAME')
         self.match_all=os.getenv('MATCH_ALL')
@@ -32,7 +33,7 @@ class Toolkit:
         self.tmp_dir=os.getenv('TMP_DIR')
         self.table_cells_maxchars=int(os.getenv('TABLE_CELLS_MAXCHARS'))
         self.span_top_k = 20 # Number of passages to be retrieved in DeepLake store
-        # embedding model
+        print("Initializing toolkit...",file=sys.stderr)
         self.embed_model = HuggingFaceEmbedding(
             model_name=self.model_name
         )
@@ -63,9 +64,9 @@ class Toolkit:
                 " about patents. Do not invent patent numbers."
             ),
         )
-        
         os.system("mkdir -p "+self.document_dir)
         os.system("mkdir -p "+self.vector_dir)
+        print("Initialization completed...",file=sys.stderr)
 
     def retrieve(self, query):
         query = self.expand_query(query)

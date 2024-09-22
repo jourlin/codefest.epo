@@ -8,6 +8,8 @@ import os
 
 from toolkit import Toolkit
 
+toolkit = Toolkit(read_only=True)
+
 app = Flask(__name__)
 
 @app.route("/download/<filename>")
@@ -29,8 +31,7 @@ def search():
       query = request.form['query']
     else:
       query = request.args.get('query')
-    t = Toolkit(read_only=True)
-    search_results = t.retrieve(query)
+    search_results = toolkit.retrieve(query)
     return Response(search_results, mimetype='text/html')
 
 @app.route('/extend', methods = ['POST', 'GET'])
@@ -39,8 +40,7 @@ def extend():
       query = request.form['query']
     else:
       query = request.args.get('query')
-    t = Toolkit(read_only=True)
-    search_results = t.extend(query)
+    search_results = toolkit.extend(query)
     return Response(search_results, mimetype='text/html')
 
 @app.route('/answer', methods = ['POST', 'GET'])
@@ -60,8 +60,7 @@ def generate_answer():
     else:
       query = request.args.get('query')
     app.logger.info(f"Answering: '{query}'")
-    t = Toolkit(read_only=True)
-    tokens=t.patchat(query).response_gen
+    tokens=toolkit.patchat(query).response_gen
     return Response(update(tokens), mimetype='text/event-stream')
 
 @app.route('/')
@@ -71,7 +70,6 @@ def index():
 
 @app.cli.command("textchat")
 def textchat():
-    t = Toolkit(read_only=True)
     while True:
         print("How can I help ? (type 'bye' to quit.)")
         question = input("> ")
@@ -79,7 +77,7 @@ def textchat():
         if question == "bye":
             print("Bye. Looking forward talking with you again !")
             break
-        streaming_response = t.patchat(question)
+        streaming_response = toolkit.patchat(question)
         print()
         for tokens in streaming_response.response_gen:
             print(str(tokens),end='', flush=True)
@@ -90,8 +88,9 @@ def textchat():
 @click.argument("index_name")
 def reindex(index_name):
     """Regenerate the Deeplake store."""
-    t=Toolkit(read_only=False, index_name=index_name)
-    t.reindex(index_name)
+    global toolkit 
+    toolkit=Toolkit(read_only=False, index_name=index_name)
+    toolkit.reindex(index_name)
 
 if __name__ == '__main__':
     app.run(debug=True, threaded=True)
