@@ -12,90 +12,128 @@
     <div id="waiter" style="display: none" class="blink_me"><i>Please wait...</i></div>
     <script>
         let eventSource;
+
         function remove_concepts() {
+            // Remove concepts IDs from query field
             var target_output = document.getElementById("query");
             target_output.value=target_output.value.replace(/ c[0-9]+/g,"");
         }
+
         function chat(){
+            // Make the "Please wait" container visible
             document.getElementById("waiter").style.display = "block";
             if (!window.EventSource) {
             // IE or an old browser
             alert("The browser doesn't support EventSource.");
             }
+            // Response Window
             var target_output = document.getElementById("response");
+            // Please Wait message
             var waiter = document.getElementById("waiter");
+            // Input query
             var query_input = document.getElementById("query");
+            // Remove concept ID's from query (not useful during chat)
             remove_concepts();
             query = query_input.value
+            // Call Patchat and get an EventSource (stream) object in response
             var answer_source = new EventSource("/answer?query="+ encodeURIComponent(query));
             answer_source.onmessage = function (e) {
                 if (e.data == "open"){
+                    // Start displaying output
                     target_output.innerHTML +="<hr><br/>";
+                    // Show "Please wait"
                     waiter.style.display = "block";
                 }
                 else if (e.data == "close") {
+                    // Answer is complete
                     target_output.innerHTML +="<br/><hr>";
+                    // Hide "Please Wait"
                     waiter.style.display = "none";
+                    // Empty query field (previous context is memorized anyway)
                     query_input.value=""
+                    // Close stream
                     answer_source.close();
                 } else {
+                    // Display new tokens
                     target_output.innerHTML +=e.data;
+                    // Scroll to page bottom
                     window.scrollTo(0, document.body.scrollHeight);
                 }
             };
         }
         function search(){
+            // Display Patent search results
             var target_output = document.getElementById("response");
             var waiter = document.getElementById("waiter");
+            // Get query text
             query = document.getElementById("query").value
             const xhr = new XMLHttpRequest();
+            // Show "Please Wait"
             waiter.style.display = "block";
+            // Get search results
             xhr.open("GET", "/search?query="+encodeURIComponent(query), true);
             xhr.onload = (e) => {
             if (xhr.readyState === 4) {
                 if (xhr.status === 200) {
+                    // Display search results
                     target_output.innerHTML=xhr.responseText;
                 } else {
+                    // If not ok : display error 
                     target_output.innerHTML=xhr.statusText;
                 }
+                // Hide "Please Wait"
                 waiter.style.display = "none";
             }
             };
             xhr.onerror = (e) => {
+                // Display Error
                 target_output.innerHTML=xhr.statusText;
+                // Hide "Please Wait"
                 waiter.style.display = "none";
             };
             xhr.send(null);
         }
         function extend(){
+            // Display UMLS concept search results
             var target_output = document.getElementById("response");
             var waiter = document.getElementById("waiter");
+            // Get query text
             query = document.getElementById("query").value
             const xhr = new XMLHttpRequest();
+            // Show "Please Wait"
             waiter.style.display = "block";
+            // Get search results
             xhr.open("GET", "/extend?query="+encodeURIComponent(query), true);
             xhr.onload = (e) => {
             if (xhr.readyState === 4) {
                 if (xhr.status === 200) {
+                    // Display search results
                     target_output.innerHTML=xhr.responseText;
                 } else {
+                    // If not ok : display error 
                     target_output.innerHTML=xhr.statusText;
                 }
+                // Hide "Please Wait"
                 waiter.style.display = "none";
             }
             };
             xhr.onerror = (e) => {
+                // Display Error
                 target_output.innerHTML=xhr.statusText;
+                // Hide "Please Wait"
                 waiter.style.display = "none";
             };
             xhr.send(null);
         }
 
         function append_query(concept) {
+            // append UMLS concept IDs to query text
             var target_output = document.getElementById("query");
             if (concept.checked) {
+                // add UMLS concept
                 target_output.value+=" "+concept.id
             } else {
+                // remove UMLS concept
                 target_output.value=target_output.value.replace(" "+concept.id,"")
             }
         }
@@ -103,10 +141,14 @@
 <hr>
 <form method="post">
 <div style="text-align: center">
+    <!-- Input query field -->
     <input type="search" id="query" name="query" size="100" placeholder="Type your query here" required /></form></body>
     <br>
+    <!-- Run query expansion button -->
     <button type="button" onclick="extend()">Extend</button>
+    <!-- Run Patent search button -->
     <button type="button" onclick="search()">Search</button>
+    <!-- Run Chatbot button -->
     <button type="button" onclick="chat()">Chat</button>
 </div>
 </form>
