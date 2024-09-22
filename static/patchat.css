@@ -1,22 +1,22 @@
 
 /* A very simple stylesheet for rendering tables and buttons */
 
+/* Search result table */
 table {
   font-family: arial, sans-serif;
   font-size: 11px; 
   border-collapse: collapse;
   width: 100%;
 }
-
 td, th {
   border: 1px solid #dddddd;
   text-align: left;
   padding: 8px;
 }
-
 tr:nth-child(even) {
   background-color: #dddddd;
 }
+/* Expand, Search and Chat buttons */
 button {
 background-color: #e1ecf4;
 border-radius: 3px;
@@ -55,13 +55,11 @@ background-color: #a0c7e4;
 box-shadow: none;
 color: #2c5777;
 }
-
-/* For the "please wait" message */
+/* "please wait" blinking message */
 .blink_me {
     animation: blinker 1s linear infinite;
   }
-  
-  @keyframes blinker {
+@keyframes blinker {
     50% {
       opacity: 0;
     }
