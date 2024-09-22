@@ -1,22 +1,24 @@
 import os 
 import sys
+import re
+from tqdm import tqdm
+
+import deeplake
 import lxml.etree as ET
 from html2text import html2text
-from tqdm import tqdm
-import deeplake
-import re
 from llama_index.core import Settings, SimpleDirectoryReader, VectorStoreIndex, StorageContext
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from llama_index.llms.ollama import Ollama
 from llama_index.vector_stores.deeplake import DeepLakeVectorStore
 from llama_index.core.memory import ChatMemoryBuffer
 
+# pattern for matching UMLS IDs
 concept_pattern = re.compile("^c[0-9]+$")
 
 class Toolkit:
-    
+    """ Toolkit is the main structure for handling HF embeddings, Ollama, Deeplake & LlamaIndex"""
     def __init__(self, read_only=False, index_name="BOTH"):
-        global app
+        # import all configuration values from .env file
         self.query=os.getenv('SEARCH_TERM')
         self.model_name=os.getenv('MODEL_NAME')
         self.match_all=os.getenv('MATCH_ALL')
@@ -32,7 +34,7 @@ class Toolkit:
         self.umls_vector_dir=os.getenv('UMLS_VEC_DIR')
         self.tmp_dir=os.getenv('TMP_DIR')
         self.table_cells_maxchars=int(os.getenv('TABLE_CELLS_MAXCHARS'))
-        self.span_top_k = 20 # Number of passages to be retrieved in DeepLake store
+        self.span_top_k = int(os.getenv('SPAN_TOPK'))
         print("Initializing toolkit...",file=sys.stderr)
         self.embed_model = HuggingFaceEmbedding(
             model_name=self.model_name
@@ -56,6 +58,7 @@ class Toolkit:
             self.index = VectorStoreIndex.from_vector_store(vector_store=self.vector_store, streaming=True, read_only=read_only)
             self.storage_context = StorageContext.from_defaults(vector_store=self.vector_store)
             self.memory = ChatMemoryBuffer.from_defaults(token_limit=self.token_limit)
+            # Here is the prompt :
             self.chat_engine = self.index.as_chat_engine(
             chat_mode="context",
             memory=self.memory,
@@ -64,16 +67,25 @@ class Toolkit:
                 " about patents. Do not invent patent numbers."
             ),
         )
+        # If needed, makes data directories
         os.system("mkdir -p "+self.document_dir)
         os.system("mkdir -p "+self.vector_dir)
+        os.system("mkdir -p "+self.umls_document_dir)
+        os.system("mkdir -p "+self.umls_vector_dir)
         print("Initialization completed...",file=sys.stderr)
 
     def retrieve(self, query):
+        """ Retrieve patents by performing a K Nearest Neighbours, based on query and patents embeddings """
+        # First expand all UMLS concepts contained in the query
         query = self.expand_query(query)
+        # LLama Index does not provide the search() method for its embedded Deeplake stores, so : 
         store = deeplake.core.vectorstore.deeplake_vectorstore.DeepLakeVectorStore(path=self.vector_dir)
         result = store.search(embedding_data=query, embedding_function=self.embed_model.get_text_embedding, k=self.span_top_k)
+        # Get retrieved filenames from Deeplake results
         docname_list = {result['metadata'][offset]['file_path'] for offset in range(0, len(result['metadata']))} 
+        # Render results as a HTML table
         result="<table><tr><th>select</th><th>ID</th><th>Published</th><th>Classification CPC</th><th>Short Desc.</th></tr>\n"
+        # Parse all retrieved XML document to extract relevant information
         for doc in docname_list:
             try:
                 root=ET.parse(doc).getroot()
@@ -98,20 +110,27 @@ class Toolkit:
         return result
 
     def extend(self, query):
+        """ extend() is for UMLS concepts what retrieved() is for patents """
         store = deeplake.core.vectorstore.deeplake_vectorstore.DeepLakeVectorStore(path=self.umls_vector_dir)
         result = store.search(embedding_data=query, embedding_function=self.embed_model.get_text_embedding, k=self.span_top_k)
+        # Get retrieved concept IDs and their contents
         concept_list = [result['metadata'][offset]['file_name'] for offset in range(0, len(result['metadata']))]
         content_list = [result['text'][offset] for offset in range(0, len(result['text']))]
         output="<table><tr><th>select</th><th>concept</th><th>alternatives</th></tr>\n"
         num_lines=0
         for offset in range(0, len(result['text'])):
             num_lines+=1
+            # As some concepts might be empty, we need to retrieve more than needed,
+            # So stop once enough 
             if num_lines > int(os.getenv('MAXNUM_DISPLAYED_CONCEPTS'))+1:
                 break
+            # Don't display long descriptions
             forms= [html2text(x) for x in content_list[offset].split("\n") if x !="" and len(x)<int(os.getenv('MAX_LEN_FOR_CONCEPT_DESC'))]
+            # Don't display spurious forms
             forms = sorted(list(filter(lambda f: len(f)>3, forms)))
             if len(forms)<=0: # skip if concept has no form
                 continue
+            # HTML for the row of selectable concept
             concept_id = concept_list[offset].strip(".txt")
             output+="<tr>"
             output+="<td>"+'<input type="checkbox" id="'+concept_id+'" onchange="append_query(this)" ></td>'
@@ -121,11 +140,13 @@ class Toolkit:
         return output
     
     def filter_query(self, query):
+        """ remove concept IDs from query """
         terms=query.split()
         filtered = list(filter(lambda t: not concept_pattern.match(t), terms))
         return " ".join(filtered)
     
     def expand_query(self, query):
+        """ Replace concept IDs in query by their contents"""
         terms=query.split()
         concepts = list(filter(lambda t: concept_pattern.match(t), terms))
         filtered = list(filter(lambda t: not concept_pattern.match(t), terms))
@@ -137,6 +158,8 @@ class Toolkit:
         return query
 
     def reindex(self, index_name):
+        """ Load, store, index data as vectors of text spans embedding """
+        # Indexing patents
         if index_name == "EP":
             print(f"Reindexing '{self.query}'...")
             file_list = os.popen("grep -i -l '"+self.query+"' "+self.document_dir+"/*.xml").read()
@@ -160,6 +183,7 @@ class Toolkit:
                 documents, show_progress=True, storage_context=self.storage_context
             )
             print("Indexing patents completed...")
+        # Indexing UMLS concepts and their forms
         elif index_name == "UMLS":
             print(f"Reindexing UMLS...")
             os.system("mkdir -p "+self.umls_vector_dir)
@@ -178,8 +202,10 @@ class Toolkit:
             print("Error : Invalid index name. Choose 'EP' for patents or 'UMLS' for concepts", file=sys.stderr)
 
     def patchat(self, question):
+        """ Start the chatbot in streaming mode """
+        # remove concept IDs as their are not helpfull here
         question = self.filter_query(question)
-        print(f"Answering '{question}'")
+        print(f"Answering '{question}'", file=sys.stderr)
         streaming_response = self.chat_engine.stream_chat(question)
         return streaming_response
 
