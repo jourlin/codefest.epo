@@ -1,8 +1,18 @@
-# Note : 
-- The following instructions were tested successfully with the followings specs :
+# Warning : 
+The following instructions were tested successfully with the followings specs :
 - Ubuntu 24.04 LTS
 - Nvidia GPU with at least 6Gb VRAM (A3000 & 3060)
+You might need to adapt some parts to fit your computer and its operating system
 
+# Download latest release
+
+1. 
+
+## Step by step installation
+
+*warning*: All instructions are given for installation on a Ubuntu 24.04 LTS operating system, with 32Gb RAM and 6Gb VRAM Nvidia GPU. They probably need to be adapted for different operating systems or machine specifications.
+
+1. Download latest release of the sofware :
 # How to install Flask server
 
 ## Commands to run in your linux terminal
