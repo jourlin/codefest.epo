@@ -1,38 +1,50 @@
-# Warning : 
+# INSTALL INSTRUCTIONS
+
+## Warning : 
 The following instructions were tested successfully with the followings specs :
 - Ubuntu 24.04 LTS
 - Nvidia GPU with at least 6Gb VRAM (A3000 & 3060)
 You might need to adapt some parts to fit your computer and its operating system
 
-# Download latest release
+## Step 1: Download latest release
 
-* visit https://github.com/jourlin/codefest.epo/releases and download ```codefest.epo-X.Y.zip``` where X and Y are respectively the version and subversion numbers of the latest release.
+* visit [my github repository](https://github.com/jourlin/codefest.epo/releases) and download ```codefest.epo-X.Y.zip``` where X and Y are respectively the version and subversion numbers of the latest release.
 
-# How to install Flask server
+## Step 2: Install Flask server
 
-## Commands to run in your linux terminal
+1. Commands to run in your linux terminal
 
-1. ```python -m venv .```
-2. ```source bin/activate```
-3. ```pip install -r requirements.txt```
-4. Edit ```.env``` to match your local system
+1. ```cd codefest.epo``` 
+2. ```python -m venv .```
+3. ```source bin/activate```
+4. ```pip install -r requirements.txt```
+5. Edit ```.env``` to match your local system
 
-## How to import full-text patents
-
+## Step 3: Download full-text patents
 - Full text patents can be downloaded by subscribed users from 
-<https://publication-bdds.apps.epo.org/raw-data/products/subscription/product/4>
-The process of downloading the completed database could be fully automatized, but it would require to make use of very important ressources and bandwith. The full compressed database seems to weight over 500Gb and over 500k full-text patents, each one provided in xml and pdf formats.
-Each zip archive contains several zip archives, that contains xml and pdf versions of the patents. We tested the flask server with EPRTBJV2024000037001001.zip and extracted only xml files for each one of the 5652 full-text patents contained in this particular zip archive.
-The xml files should be moved to the directory given by $DOC_DIR environement variable that is defined in file ```.env``` before executing ```flask reindex```
+[EPO Bulk data](https://publication-bdds.apps.epo.org/raw-data/products/subscription/product/4>)
+- The process of downloading the completed database might be fully automatized, but it would require to make use of very important ressources and bandwith. The full compressed database seems to weight over 500Gb and to contain over 500k full-text patents, each one provided in xml and pdf formats.
+- Each zip archive contains several zip archives, that contains xml and pdf versions of the patents. We tested the flask server with EPRTBJV2024000037001001.zip and extracted only xml files for each one of the 5652 full-text patents contained in this particular zip archive.
+- Top level zip files must be moved to the directory given by $DOC_DIR environement variable that is defined in file ```.env```
 
-## How to run the embedding indexer
+## Step 4: Download UMLS data
+- Full UMLS data can be obtained at :
+[UMLS Metathesaurus](https://download.nlm.nih.gov/umls/kss/2024AA/umls-2024AA-metathesaurus-full.zip)
+However it is free of charge, user must obtain a UMLS licence and is requested to sign in before downloading the zip archive.
+- umls-<YEAR><CODE>-metathesaurus-full.zip must be moved to the directory given by $UMLS_DOC_DIR environement variable that is defined in file ```.env``` 
 
-```flask reindex "my request"```
+## Step 5: Data preparation
+- Execute ```bash data_preparation.sh``` in your terminal (codefest.epo should be your current directory)
 
-## How to run the web server
+## Step 6: HRun the embedding indexer
+```flask reindex BOTH```
+(instead of "BOTH" you can speficy "UMLS" or "EP" when only one the the indexes needs (re)indexing)
 
+## Step 7: How to run the web server
 ```flask run```
 
-### Use the chatbot
+## Step 8: Use the retriever and chatbot
+1. Open [http://127.0.0.1:5000](http://127.0.0.1:5000) with a web browser
 
-1. Open ```http://127.0.0.1:5000``` with a web browser
+## Step 9: User guide
+Have a look at [USER_GUIDE.md](./USER_GUIDE.md) for instructions and explanation of user's interface

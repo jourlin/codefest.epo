@@ -102,6 +102,7 @@ def reindex(index_name):
     """Regenerate the Deeplake store."""
     global toolkit 
     # Need to write the index
+    app.logger.info("Reopening indexes in write mode...")
     toolkit=Toolkit(read_only=False, index_name=index_name)
     toolkit.reindex(index_name)
 

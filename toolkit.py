@@ -160,7 +160,7 @@ class Toolkit:
     def reindex(self, index_name):
         """ Load, store, index data as vectors of text spans embedding """
         # Indexing patents
-        if index_name == "EP":
+        if index_name in ["EP", "BOTH"]:
             print(f"Reindexing '{self.query}'...")
             file_list = os.popen("grep -i -l '"+self.query+"' "+self.document_dir+"/*.xml").read()
             file_list = file_list.splitlines()
@@ -184,7 +184,7 @@ class Toolkit:
             )
             print("Indexing patents completed...")
         # Indexing UMLS concepts and their forms
-        elif index_name == "UMLS":
+        if index_name in ["UMLS", "BOTH"]:
             print(f"Reindexing UMLS...")
             os.system("mkdir -p "+self.umls_vector_dir)
             # Load documents and build index
