@@ -31,14 +31,19 @@ You might need to adapt some parts to fit your computer and its operating system
 - Full UMLS data can be obtained at :
 [UMLS Metathesaurus](https://download.nlm.nih.gov/umls/kss/2024AA/umls-2024AA-metathesaurus-full.zip)
 However it is free of charge, user must obtain a UMLS licence and is requested to sign in before downloading the zip archive.
-- umls-<YEAR><CODE>-metathesaurus-full.zip must be moved to the directory given by $UMLS_DOC_DIR environement variable that is defined in file ```.env``` 
+- umls-YYYY-AA-metathesaurus-full.zip must be moved to the directory given by $UMLS_DOC_DIR environement variable that is defined in file ```.env``` (XXXX is the current year and AA a letter code )
 
 ## Step 5: Data preparation
 - Execute ```bash data_preparation.sh``` in your terminal (codefest.epo should be your current directory)
+**WARNING** : Depending on the size of data to be unzipped, the full process can take hours, even days.
+For instance, indexing only 209 full-text patents takes about 15 min on a Dell Precision 7560 laptop with 32Gb RAM and 6Gb VRAM (Nvidia A3000).
 
-## Step 6: HRun the embedding indexer
+## Step 6: Run the embedding indexer
 ```flask reindex BOTH```
-(instead of "BOTH" you can speficy "UMLS" or "EP" when only one the the indexes needs (re)indexing)
+(instead of "BOTH" you can speficy "UMLS" (for medical concepts) or "EP" (for patents) when only one the the indexes needs (re)indexing)
+**WARNING** : Depending on the size of data to be indexed, the full process can take hours or even days.
+For instance, indexing only 10k concepts takes about 15 min on a Dell Precision 7560 laptop with 32Gb RAM and 6Gb VRAM (Nvidia A3000).
+So, as the full UMLS database contains over 3 million concepts, expecting indexing duration would be about 3 days with an equivalent computer setting.
 
 ## Step 7: How to run the web server
 ```flask run```

@@ -1,4 +1,4 @@
-from flask import Flask, Response, render_template, stream_template,send_from_directory, request
+from flask import Flask, Response, render_template, stream_template,send_from_directory, request, redirect, flash
 from markupsafe import escape
 
 import time
@@ -31,6 +31,21 @@ def favicon():
     app.logger.info("Path: "+os.path.join(app.root_path, 'static'))
     return send_from_directory(os.path.join(app.root_path, 'static'),
         'favicon.ico',mimetype='image/vnd.microsoft.icon')
+
+# upload a file
+@app.route('/upload', methods = ['POST'])
+def upload():
+    if request.method != 'POST':
+      return Response()
+    if 'file' not in request.files:
+        flash('No file part')
+        return Response()
+    file = request.files['file']
+    if file.filename == '':
+        flash('No selected file')
+        return Response()
+    search_results = toolkit.retrieve(file.content, query_is_file=True)
+    return Response(search_results, mimetype='text/html')
 
 # Search for patents
 @app.route('/search', methods = ['POST', 'GET'])

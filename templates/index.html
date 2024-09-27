@@ -5,6 +5,7 @@
     <title>PatChat</title>
     <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='patchat.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
 <body>
     <h1 style="text-align:center">Welcome to PatChat : a Patent retriever and RAG chatbot</h1>
@@ -23,8 +24,8 @@
             // Make the "Please wait" container visible
             document.getElementById("waiter").style.display = "block";
             if (!window.EventSource) {
-            // IE or an old browser
-            alert("The browser doesn't support EventSource.");
+                // IE or an old browser
+                alert("The browser doesn't support EventSource.");
             }
             // Response Window
             var target_output = document.getElementById("response");
@@ -32,21 +33,31 @@
             var waiter = document.getElementById("waiter");
             // Input query
             var query_input = document.getElementById("query");
+            if (query_input.type == "file"){
+                target_output.innerHTML="<h1>Sorry I cannot chat without a prompt !</h1>";
+                // Hide "Please Wait"
+                waiter.style.display = "none";
+                return;
+            }
             // Remove concept ID's from query (not useful during chat)
             remove_concepts();
             query = query_input.value
+            if (query == ""){
+                target_output.innerHTML="<h1>Sorry I need you to ask a question</h1>";
+                // Hide "Please Wait"
+                waiter.style.display = "none";
+                return;
+            }
             // Call Patchat and get an EventSource (stream) object in response
             var answer_source = new EventSource("/answer?query="+ encodeURIComponent(query));
             answer_source.onmessage = function (e) {
                 if (e.data == "open"){
-                    // Start displaying output
-                    target_output.innerHTML +="<hr><br/>";
                     // Show "Please wait"
                     waiter.style.display = "block";
                 }
                 else if (e.data == "close") {
                     // Answer is complete
-                    target_output.innerHTML +="<br/><hr>";
+                    target_output.innerHTML="<hr><br/>\n"+marked.parse(target_output.innerText.replace("<br/>", "\n"))+"<br/><hr>\n";
                     // Hide "Please Wait"
                     waiter.style.display = "none";
                     // Empty query field (previous context is memorized anyway)
@@ -83,6 +94,7 @@
                 }
                 // Hide "Please Wait"
                 waiter.style.display = "none";
+                document.getElementById("query").type="search"
             }
             };
             xhr.onerror = (e) => {
@@ -90,6 +102,7 @@
                 target_output.innerHTML=xhr.statusText;
                 // Hide "Please Wait"
                 waiter.style.display = "none";
+                document.getElementById("query").type="search"
             };
             xhr.send(null);
         }
@@ -115,6 +128,7 @@
                 }
                 // Hide "Please Wait"
                 waiter.style.display = "none";
+                document.getElementById("query").type="search"
             }
             };
             xhr.onerror = (e) => {
@@ -137,10 +151,21 @@
                 target_output.value=target_output.value.replace(" "+concept.id,"")
             }
         }
-</script>
+
+        function toggle_input(){
+            input_id=document.getElementById("query");
+            if (input_id.type == "search"){
+                input_id.type = "file"
+            }
+            else {
+                input_id.type = "search"
+            }
+        }
+    </script>
 <hr>
 <form method="post">
 <div style="text-align: center">
+    <button type="button" onclick="toggle_input()">text ⇄ file</button>
     <!-- Input query field -->
     <input type="search" id="query" name="query" size="100" placeholder="Type your query here" required /></form></body>
     <br>

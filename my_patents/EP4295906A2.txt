@@ -1,0 +1,230 @@
+Description
+CROSS-REFERENCE
+[0001] This application claims the benefit of U.S. Pro-
+visional Application No. 62/398,471, filed Sept. 22, 2016
+[Attorney Docket No 34634-730.101], which application
+is incorporated herein by reference.
+BACKGROUND
+[0002] 1. Field of the Disclosure. The present disclo-
+sure relates generally to medical methods and devices.
+More particularly, the present disclosure relates to med-
+ical methods and kits for distributing temsirolimus in the
+tissue surrounding a blood vessel.
+[0003] Blockages can form in blood vessels under var-
+ious disease conditions. In atherosclerosis, the narrow-
+ing of arteries in the body, particularly in the heart, legs,
+carotid and renal anatomy, can lead to tissue ischemia
+from lack of blood flow. Mechanical revascularization
+methods, such as balloon angioplasty, atherectomy,
+stenting, or surgical endarterectomy, may be used to
+open the blood vessel and to improve blood flow to down-
+stream tissues. Unfortunately, mechanical revasculari-
+zation can leadtoan injurycascadethat causes the blood
+vessel to stiffen and vessel walls to thicken with a scar-
+like tissue, which can reduce the blood flow and neces-
+sitate another revascularization procedure. There is a
+greatdesiretoreduce thevesselstiffeningandthickening
+following mechanical revascularization to maintain or im-
+prove the patency of the blood vessel.
+SUMMARY
+[0004] There is a great desire to reduce the vessel stiff-
+ening and thickening following mechanical revasculari-
+zation of narrowed blood vessel to maintain or improve
+the patency of the blood vessel. The present disclosure
+provides methods and injectable composition for distrib-
+uting temsirolimus to a tissue surrounding a blood vessel
+for treating vascular diseases.
+[0005] In a certain aspect, described herein, is a meth-
+od of treating a vasculardisease in a subject.The method
+of treating the vascular disease in the subject comprises
+administering to the subject a therapeutically effective
+amount of a pharmaceutical composition comprising
+temsirolimus or its pharmaceutically acceptable salts. In
+certain embodiments, the composition is administered
+by direct injection to a disease site. In a certain embod-
+iment, the composition is injected though a catheter with
+a needle. In a certain embodiment, the composition is
+injected distal or proximal to the disease site. In a certain
+embodiment, the composition is injected at least about
+2 cm away from the disease site. In a certain embodi-
+ment, the composition is injected at or adjacent to the
+disease site. In a certain embodiment, the composition
+is administered by injection into a blood vessel. In a cer-
+tain embodiment, the composition is injected into an ad-
+ventitial tissue surrounding a blood vessel. In a certain
+embodiment, the composition is injected into a perivas-
+cular tissue surrounding a blood vessel. In a certain em-
+bodiment, the blood vessel is an artery. In a certain em-
+bodiment, the blood vessel is a vein. In a certain embod-
+iment, the artery is a coronary artery or a peripheral ar-
+tery. In a certain embodiment, the artery is selected from
+the group consisting of renal artery, cerebral artery, pul-
+monary artery, and artery in the leg. In a certain embod-
+iment, the artery is below the knee. In a certain embod-
+iment, the artery is in the leg above the knee. In a certain
+embodiment, the blood vessel is below-knee popliteal
+vessel or tibial vessel. In a certain embodiment, the com-
+position is injected into a blood vessel wall. In a certain
+embodiment,the composition is injected into a tissuesur-
+rounding the blood vessel wall.
+[0006] In certain embodiments, the therapeutically ef-
+fective amount of temsirolimus is about 1 mg to 50 mg,
+about 10 mg to 20 mg, or about 25 mg to 10 mg. In certain
+embodiments, the therapeutically effective amount of
+temsirolimus is about 0.005 mg to 5 mg per cm, or about
+0.025 mg to 1 mg per cm of longitudinal length of the
+disease site in the blood vessel. In certain embodiments,
+the injection volume of the composition is about 0.01 ml
+to about 50 ml, or about 0.5 ml to about 20 ml. In certain
+embodiments, the injection concentration of tem-
+sirolimus is 0.01 mg/mL to 2.0 mg/mL, 0.1 mg/mL to 0.5
+mg/mL, or 0.1 mg/mL to 0.4 mg/mL. In certain embodi-
+ments, 12 months after administration of the pharmaceu-
+tical composition, vessel cross-sectional area at the dis-
+ease site has decreased no more than 60%, 50%, or
+30%, when compared to vessel cross-sectional area at
+the disease site at the time of administration. In a certain
+embodiment, the composition further comprises a con-
+trast medium for visualizing the injection. In a certain em-
+bodiment, the subject is human.
+[0007] In certain embodiments, the vascular disease
+is angina, myocardial infarction, congestive heart failure,
+cardiac arrhythmia, peripheral artery disease, claudica-
+tion, or critical limb ischemia. In certain embodiments,
+the vascular disease is atherosclerosis, bypass graft fail-
+ure, transplant vasculopathy, vascular restenosis, or in-
+stent restenosis.
+[0008] In another aspect, described herein, is an in-
+jectable composition comprising temsirolimus or a phar-
+maceutically acceptable salt thereof, and a pharmaceu-
+tically acceptable excipient for use in treating a vascular
+disease.In acertainembodiment,thecompositionissuit-
+able for adventitial delivery. In a certain embodiment, the
+composition is suitable for adventitial delivery in the leg.
+In a certain embodiment, the composition is suitable for
+adventitial delivery below the knee. In a certain embod-
+iment, the composition is suitable for adventitial delivery
+in the leg above the knee. In a certain embodiment, the
+composition is suitable for adventitial delivery to a below-
+knee popliteal or tibial vessel. In a certain embodiment,
+the composition is suitable for direct injection to the vas-
+1 2
+EP 4 295 906 A2
+3
+5
+10
+15
+20
+25
+30
+35
+40
+45
+50
+55
+cular disease site. In certain embodiments, the therapeu-
+tically effective amount of temsirolimus is about 1 mg to
+50 mg, about 10 mg to 20 mg, or about 25 mg to 10 mg.
+In certain embodiments, the injection volume of the com-
+position is about 0.01 ml to about 50 ml, or about 0.5 ml
+to about 20 ml. In certain embodiments, the therapeuti-
+cally effective amount of temsirolimus is about 0.005 mg
+to 5 mg per cm, or about 0.025 mg to 1 mg per cm of
+longitudinal length of the disease site in the blood vessel.
+In certain embodiments, the concentration of tem-
+sirolimus is 0.01 mg/mL to 2.0 mg/mL, about 0.1 to 0.5
+mg/mL, or about 0.1 mg/mL to about 0.4 mg/mL. In a
+certain embodiment, the injectable composition is for use
+in treating, preventing, or inhibiting restenosis in the leg.
+In a certain embodiment, the injectable composition is
+for use in treating, preventing, or inhibiting restenosis be-
+low the knee. In a certain embodiment, the injectable
+composition is for use in treating, preventing, or inhibiting
+restenosis in the leg above the knee. In a certain embod-
+iment, the injectable composition is for use in treating,
+preventing, or inhibiting restenosis in a below-knee pop-
+liteal vessel or tibial vessel. In a certain embodiment, the
+injectable composition is for use in treating, preventing,
+or inhibiting restenosis in a femoral vessel. In a certain
+embodiment, the pharmaceutically acceptable excipient
+of the injectable composition is 0.9% sodium chloride in-
+jection USP, dehydrated alcohol, dl-alpha tocopherol,
+anhydrouscitricacid,polysorbate80,polyethyleneglycol
+400, propylene glycol, or a combination thereof.
+[0009] Inanotheraspect,describedherein,isamethod
+of treating a peripheral artery disease in a human subject
+in need thereof, the method comprising administering to
+the subject a therapeutically effective amount of a phar-
+maceutical composition comprising temsirolimus or its
+pharmaceutically acceptable salts thereof, wherein the
+composition is administered by direct injection to or near
+adiseasesiteinatissuesurroundingawallofaperipheral
+artery or in the wall of the peripheral artery via a laterally
+extending injection needle of a catheter advanced
+through vasculature of the human subject, wherein the
+amount of the pharmaceutical composition is therapeu-
+tically effective to cause patency at the disease site after
+administration to only minimally decrease or to increase
+when compared to patency at the disease site at the time
+of administration. In certain embodiments, the therapeu-
+tically effective amount of temsirolimus is about 1 mg to
+50 mg, about 10 mg to 20 mg, or about 25 mg to 10 mg.
+In certain embodiments, the therapeutically effective
+amount of temsirolimus is about 0.005 mg to 5 mg per
+cm, or about 0.025 mg to 1 mg per cm of longitudinal
+length of the disease site in the peripheral artery. In cer-
+tain embodiments, the injection volume of the composi-
+tion is about 0.01 ml to about 50 ml, or about 0.5 ml to
+about 20 ml. In certain embodiments, the injection con-
+centration of temsirolimus is 0.01 mg/mL to 2.0 mg/mL,
+0.1 mg/mL to 0.5 mg/mL, or 0.1 mg/mL to 0.4 mg/mL. In
+certain embodiments, 12 months after administration of
+the pharmaceutical composition, vessel cross-sectional
+area at the disease site has decreased no more than
+60%, 50%, or 30%, when compared to vessel cross-sec-
+tional area at the disease site at the time of administra-
+tion. In a certain embodiment, the composition further
+comprises a contrastmedium for visualizing the injection.
+In a certain embodiment, the artery is below the knee. In
+a certain embodiment, the artery is in the leg above the
+knee.In a certain embodiment, the blood vesselis below-
+knee popliteal vessel or tibial vessel.
+[0010] In another aspect, described herein, is an in-
+jectable composition comprising temsirolimus or a phar-
+maceutically acceptable salt thereof, and a pharmaceu-
+tically acceptable excipient for use in treating restenosis
+in a peripheral artery of a human subject, wherein the
+composition is suitable for adventitial delivery to the pe-
+ripheral artery, wherein the composition is suitable for
+direct injection to a vascular disease site in a tissue sur-
+rounding a wall of the peripheral artery or in the wall of
+the peripheral artery via a laterally extending needle from
+a catheter advanced through vasculature of the human
+subject in a therapeutically effective amount effective to
+cause patency at the disease site after administration to
+increase or minimally decrease when compared to pat-
+ency at the disease site at the time of administration. In
+a certain embodiment, the composition is suitable for ad-
+ventitial delivery in the leg. In a certain embodiment, the
+composition is suitable for adventitial delivery below the
+knee. In a certain embodiment, the composition is suit-
+able for adventitial delivery in the leg above the knee. In
+a certain embodiment, the composition is suitable for ad-
+ventitial delivery to a below-knee popliteal ortibialvessel.
+In certain embodiments, the therapeutically effective
+amount of temsirolimus is about 1 mg to 50 mg, about 10
+mg to 20 mg, or about 25 mg to 10 mg. In certain embod-
+iments, the injection volume of the composition is about
+0.01 ml to about 50 ml, or about 0.5 ml to about 20 ml.
+In certain embodiments, the therapeutically effective
+amount of temsirolimus is about 0.005 mg to 5 mg per
+cm, or about 0.025 mg to 1 mg per cm of longitudinal
+length of the disease site in the blood vessel. In certain
+embodiments, the concentration of temsirolimus is about
+0.01 mg/mL to about 2.0 mg/mL, about 0.1 mg/mL to
+about 0.5 mg/mL, or about 0.1 mg/mL to about 0.4
+mg/mL. In a certain embodiment, the pharmaceutically
+acceptable excipient is 0.9% sodium chloride injection
+USP, dehydrated alcohol, dl-alpha tocopherol, anhy-
+drous citric acid,polysorbate80,polyethyleneglycol400,
+propylene glycol, or a combination thereof.

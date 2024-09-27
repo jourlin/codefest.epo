@@ -74,10 +74,12 @@ class Toolkit:
         os.system("mkdir -p "+self.umls_vector_dir)
         print("Initialization completed...",file=sys.stderr)
 
-    def retrieve(self, query):
+    def retrieve(self, query, query_is_file=False):
         """ Retrieve patents by performing a K Nearest Neighbours, based on query and patents embeddings """
-        # First expand all UMLS concepts contained in the query
-        query = self.expand_query(query)
+        if not query_is_file:
+            # First expand all UMLS concepts contained in the query
+            query = self.expand_query(query)
+        
         # LLama Index does not provide the search() method for its embedded Deeplake stores, so : 
         store = deeplake.core.vectorstore.deeplake_vectorstore.DeepLakeVectorStore(path=self.vector_dir)
         result = store.search(embedding_data=query, embedding_function=self.embed_model.get_text_embedding, k=self.span_top_k)
@@ -173,6 +175,7 @@ class Toolkit:
                 if len(fn)>0:
                     os.system("cp "+fn+" "+self.tmp_dir)
             # Load documents and build index
+            print("loading data...")
             documents = SimpleDirectoryReader(self.tmp_dir).load_data(num_workers=int(os.getenv('NUM_WORKERS')))
             # embedding model
             Settings.embed_model = self.embed_model
@@ -198,7 +201,7 @@ class Toolkit:
                 concepts, show_progress=True, storage_context=self.umls_storage_context
             )
             print("Indexing umls concepts completed...")
-        else:
+        if index_name not in ["EP", "UMLS", "BOTH"]:
             print("Error : Invalid index name. Choose 'EP' for patents or 'UMLS' for concepts", file=sys.stderr)
 
     def patchat(self, question):
