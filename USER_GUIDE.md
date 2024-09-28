@@ -8,6 +8,7 @@ Your should see :
 ## Query and actions (summary)
 - You're current input is a text query. You can swith to a file query by clicking the "text ⇄ file" button :
 ![Input a file](images/InputFile.png)
+
 You can type your query in the text field and click on one of the 3 available buttons :
 1. Extend: get a selection of medical concepts that you might want to append to your query
 2. Search: get a selection of patents that you might want to provide to the chatbot.

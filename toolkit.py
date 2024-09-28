@@ -2,6 +2,7 @@ import os
 import sys
 import re
 from tqdm import tqdm
+from markdown import markdown
 
 import deeplake
 import lxml.etree as ET
@@ -9,6 +10,7 @@ from html2text import html2text
 from llama_index.core import Settings, SimpleDirectoryReader, VectorStoreIndex, StorageContext
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from llama_index.llms.ollama import Ollama
+from llama_index.core.llms import ChatMessage
 from llama_index.vector_stores.deeplake import DeepLakeVectorStore
 from llama_index.core.memory import ChatMemoryBuffer
 
@@ -74,6 +76,21 @@ class Toolkit:
         os.system("mkdir -p "+self.umls_vector_dir)
         print("Initialization completed...",file=sys.stderr)
 
+    def main_strength(self,text):
+        """ Extract a brief description of major strengths of the invention """
+        llm = Ollama(model=self.llm)
+        messages=[
+            ChatMessage(role="assistant", content="You are an assistant, do what the user tells you to do properly."),
+            ChatMessage(role="user", content=f"Top 5 major strengths of the following invention. Answer in less than 50 words: {text} ")
+        ]
+        resp = llm.chat(messages)
+        content = None
+        for item in resp:
+            if isinstance(item, tuple) and item[0] == 'message':
+                content = item[1].content
+                break
+        return content
+    
     def retrieve(self, query, query_is_file=False):
         """ Retrieve patents by performing a K Nearest Neighbours, based on query and patents embeddings """
         if not query_is_file:
@@ -84,11 +101,14 @@ class Toolkit:
         store = deeplake.core.vectorstore.deeplake_vectorstore.DeepLakeVectorStore(path=self.vector_dir)
         result = store.search(embedding_data=query, embedding_function=self.embed_model.get_text_embedding, k=self.span_top_k)
         # Get retrieved filenames from Deeplake results
-        docname_list = {result['metadata'][offset]['file_path'] for offset in range(0, len(result['metadata']))} 
+        docname_list = [result['metadata'][offset]['file_path'] for offset in range(0, len(result['metadata']))]
+        print(result['metadata'][0].keys())
+        #strengths_list = [result['metadata'][offset]['strengths'] for offset in range(0, len(result['metadata']))]
         # Render results as a HTML table
-        result="<table><tr><th>select</th><th>ID</th><th>Published</th><th>Classification CPC</th><th>Short Desc.</th></tr>\n"
+        output="<table><tr><th>select</th><th>ID</th><th>Published</th><th>Classification CPC</th><th>Major strengths (AI generated)</th></tr>\n"
         # Parse all retrieved XML document to extract relevant information
-        for doc in docname_list:
+        for offset in range(0, len(docname_list)):
+            doc = docname_list[offset]
             try:
                 root=ET.parse(doc).getroot()
             except:
@@ -100,16 +120,12 @@ class Toolkit:
             day=date[6:8]
             date = day+'/'+month+"/"+year
             category=root.xpath('//B540/B542/text()')[1]
-            short=root.xpath('//description/heading[text()="SUMMARY"]')
-            if len(short)>0:
-                short=short[0].getnext().xpath('text()')[0][:self.table_cells_maxchars]+'...'
-            else:
-                short="..."    
-            result+='<tr>'
-            result+="<td>"+'<input type="checkbox" id="'+id+'" onchange="append_query(this)" ></td>'
-            result+='<td><a href="/download/'+os.path.basename(doc).strip(".xml")+'.pdf"'+f">{id}</a></td><td>{date}</td><td>{category}</td><td>{short}</td></tr>\n"
-        result+="</table>\n"
-        return result
+            short = strengths_list[offset]
+            output+='<tr>'
+            output+="<td>"+'<input type="checkbox" id="'+id+'" onchange="append_query(this)" ></td>'
+            output+='<td><a href="/download/'+os.path.basename(doc).strip(".xml")+'.pdf"'+f">{id}</a></td><td>{date}</td><td>{category}</td><td>{short}</td></tr>\n"
+        output+="</table>\n"
+        return output
 
     def extend(self, query):
         """ extend() is for UMLS concepts what retrieved() is for patents """
@@ -177,6 +193,9 @@ class Toolkit:
             # Load documents and build index
             print("loading data...")
             documents = SimpleDirectoryReader(self.tmp_dir).load_data(num_workers=int(os.getenv('NUM_WORKERS')))
+            for doc in documents:
+                root=ET.fromstring(bytes(doc.text, encoding='utf8'))
+                doc.metadata["strengths"]=markdown(self.main_strength("\n".join(root.xpath('//text()'))[:self.token_limit]))
             # embedding model
             Settings.embed_model = self.embed_model
             # ollama
@@ -212,3 +231,5 @@ class Toolkit:
         streaming_response = self.chat_engine.stream_chat(question)
         return streaming_response
 
+if __name__ == "main":
+    print("Coucouc")
