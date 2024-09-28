@@ -68,6 +68,8 @@ let eventSource;
             // Display Patent search results
             var target_output = document.getElementById("response");
             var waiter = document.getElementById("waiter");
+            // Clean history
+            document.getElementById("history").innerHTML="";
             // Get query text
             query = document.getElementById("query").value
             const xhr = new XMLHttpRequest();
@@ -102,6 +104,8 @@ let eventSource;
             // Display UMLS concept search results
             var target_output = document.getElementById("response");
             var waiter = document.getElementById("waiter");
+            // Clean history
+            document.getElementById("history").innerHTML="";
             // Get query text
             query = document.getElementById("query").value
             const xhr = new XMLHttpRequest();
