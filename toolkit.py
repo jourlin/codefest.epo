@@ -16,6 +16,9 @@ from llama_index.core.memory import ChatMemoryBuffer
 
 # pattern for matching UMLS IDs
 concept_pattern = re.compile("^c[0-9]+$")
+ai_generated_prompts = {
+    "strengths" : ["Major strengths", "Top 5 major strengths of the following invention. Answer in less than 50 words: "]
+}
 
 class Toolkit:
     """ Toolkit is the main structure for handling HF embeddings, Ollama, Deeplake & LlamaIndex"""
@@ -76,12 +79,12 @@ class Toolkit:
         os.system("mkdir -p "+self.umls_vector_dir)
         print("Initialization completed...",file=sys.stderr)
 
-    def main_strength(self,text):
+    def get_ai_generated_field(self,text, field):
         """ Extract a brief description of major strengths of the invention """
         llm = Ollama(model=self.llm)
         messages=[
             ChatMessage(role="assistant", content="You are an assistant, do what the user tells you to do properly."),
-            ChatMessage(role="user", content=f"Top 5 major strengths of the following invention. Answer in less than 50 words: {text} ")
+            ChatMessage(role="user", content=ai_generated_prompts[field][1]+text)
         ]
         resp = llm.chat(messages)
         content = None
@@ -101,14 +104,15 @@ class Toolkit:
         store = deeplake.core.vectorstore.deeplake_vectorstore.DeepLakeVectorStore(path=self.vector_dir)
         result = store.search(embedding_data=query, embedding_function=self.embed_model.get_text_embedding, k=self.span_top_k)
         # Get retrieved filenames from Deeplake results
-        docname_list = [result['metadata'][offset]['file_path'] for offset in range(0, len(result['metadata']))]
-        print(result['metadata'][0].keys())
+        docname_list ={result['metadata'][offset]['file_path'] for offset in range(0, len(result['metadata']))}
         #strengths_list = [result['metadata'][offset]['strengths'] for offset in range(0, len(result['metadata']))]
         # Render results as a HTML table
-        output="<table><tr><th>select</th><th>ID</th><th>Published</th><th>Classification CPC</th><th>Major strengths (AI generated)</th></tr>\n"
+        output="<table><tr><th>select</th><th>ID</th><th>Published</th><th>Classification CPC</th>"
+        for field in ai_generated_prompts.keys():
+            output+=f"<th>✨{ai_generated_prompts[field][0]} (AI generated)</th>"
+        output+="</tr>\n"
         # Parse all retrieved XML document to extract relevant information
-        for offset in range(0, len(docname_list)):
-            doc = docname_list[offset]
+        for doc in docname_list:
             try:
                 root=ET.parse(doc).getroot()
             except:
@@ -120,10 +124,14 @@ class Toolkit:
             day=date[6:8]
             date = day+'/'+month+"/"+year
             category=root.xpath('//B540/B542/text()')[1]
-            short = strengths_list[offset]
             output+='<tr>'
             output+="<td>"+'<input type="checkbox" id="'+id+'" onchange="append_query(this)" ></td>'
-            output+='<td><a href="/download/'+os.path.basename(doc).strip(".xml")+'.pdf"'+f">{id}</a></td><td>{date}</td><td>{category}</td><td>{short}</td></tr>\n"
+            output+='<td><a href="/download/'+os.path.basename(doc).strip(".xml")+'.pdf"'+f">{id}</a></td><td>{date}</td><td>{category}</td>"
+            for field in ai_generated_prompts.keys():
+                with open(doc.strip(".xml")+"."+field+'.html', "r") as file:
+                    content = file.read()
+                    output+=f"<td>{content}</td>"
+            output+="</tr>\n"
         output+="</table>\n"
         return output
 
@@ -193,9 +201,15 @@ class Toolkit:
             # Load documents and build index
             print("loading data...")
             documents = SimpleDirectoryReader(self.tmp_dir).load_data(num_workers=int(os.getenv('NUM_WORKERS')))
-            for doc in documents:
+            print("Extract AI generated fields...")
+            for doc in tqdm(documents):
+                # parse xml file
                 root=ET.fromstring(bytes(doc.text, encoding='utf8'))
-                doc.metadata["strengths"]=markdown(self.main_strength("\n".join(root.xpath('//text()'))[:self.token_limit]))
+                # Extract AI generated files
+                for field in ai_generated_prompts.keys():
+                    filename = doc.metadata["file_path"].strip(".xml")+'.'+field+'.html'
+                    with open(filename, "w") as file:
+                        file.write(markdown(self.get_ai_generated_field("\n".join(root.xpath('//text()'))[:self.token_limit], field)))
             # embedding model
             Settings.embed_model = self.embed_model
             # ollama
