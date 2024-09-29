@@ -18,7 +18,7 @@ You might need to adapt some parts to fit your computer and its operating system
 2. ```python -m venv .```
 3. ```source bin/activate```
 4. ```pip install -r requirements.txt```
-5. Edit ```.env``` to match your local system
+5. Edit ```./src/.env``` to match your local system
 
 ## Step 3: Download full-text patents
 - Full text patents can be downloaded by subscribed users from 
@@ -34,7 +34,7 @@ However it is free of charge, user must obtain a UMLS licence and is requested t
 - umls-YYYY-AA-metathesaurus-full.zip must be moved to the directory given by $UMLS_DOC_DIR environement variable that is defined in file ```.env``` (XXXX is the current year and AA a letter code )
 
 ## Step 5: Data preparation
-- Execute ```bash data_preparation.sh``` in your terminal (codefest.epo should be your current directory)
+- Execute ```./src/bash data_preparation.sh``` in your terminal (codefest.epo should be your current directory)
 **WARNING** : Depending on the size of data to be unzipped, the full process can take hours, even days.
 For instance, indexing only 209 full-text patents takes about 15 min on a Dell Precision 7560 laptop with 32Gb RAM and 6Gb VRAM (Nvidia A3000).
 
