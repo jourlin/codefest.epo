@@ -20,9 +20,7 @@ def index():
 # Download PDF version of patent
 @app.route("/download/<filename>")
 def download(filename):
-    workingdir = os.path.abspath(os.getcwd())
-    filepath = workingdir + '/documents/'
-    print(filepath, filename)
+    filepath = os.getenv("DOC_DIR")
     return send_from_directory(filepath, filename)
 
 # Don't want any 404 error code
