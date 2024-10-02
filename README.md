@@ -12,7 +12,7 @@ The proposed project aims to develop a Retrieval-Augmented Generation (RAG) AI s
 ## Testing without installing
 
 Open a browser at http://jourlin.ddns.net:5000
-It should be active from october 23th 2024 to december 31th 2024.
+It should be active from october 23th 2024 to december 31th 2024 during working hours, let say from 10am to 18am.
 
 ## Installation
 See [INSTALL.md](./docs/INSTALL.md)
