@@ -25,4 +25,20 @@ The "Extend" button triggers :
 
 ## Patent retrieval
 
+Patent retrieval can be based on :
+- simple text query
+- text query extended by a list of UMLS concept IDs.
+- a "file" query : the result is a document similarity search.
+In the resulting table, fields are extracted from XML tags and AI text analysis. Patents that are selected are automatically added to the query for subsequent AI conversations.
+For example:
+![Patent Search](images/PatentSearch.png)
+
 ## Chatbot
+The first "prompt" can be:
+- a text query
+- a text query containing patent IDs
+Example :
+![ChatBot](images/Patchat1.png)
+Note that the chatbot "memorize" previous interactions, so following queries might refer to previous answers, such as :
+![ChatBot](images/Patchat2.png)
+

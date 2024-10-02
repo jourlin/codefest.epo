@@ -6,13 +6,13 @@ rm -f *.zip
 rm -fr DTDS index.html VOLUMEID CONTENTS index.xml
 find . -name "*.zip" -exec unzip -n {} \;
 rm -fr DOC TOC.xml
-cd ..
+cd -
 
 # Prepare UMLS data (needs to be updated according to UMLS updates)
 # Note that at the time I wrote this, the data contained a total of :
 # 8,684,051 textuals forms for a total of  3,210,943 concepts
 
-cd ../umls
+cd ../resources/umls
 unzip umls-2024AA-metathesaurus-full.zip 2024AA/META/MRCONSO.RRF 2024AA/META/MRDEF.RRF
 rm umls-2024AA-metathesaurus-full.zip
 
