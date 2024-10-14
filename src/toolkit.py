@@ -198,7 +198,7 @@ class Toolkit:
             for fn in tqdm(file_list):
                 if len(fn)>0:
                     os.system("cp "+fn+" "+self.tmp_dir)
-                    os.system("cp "+fn.strip("xml")+".pdf "+self.tmp_dir)
+                    # os.system("cp "+fn.strip(".xml")+".pdf "+self.tmp_dir)
             # Load documents and build index
             print("loading data...")
             documents = SimpleDirectoryReader(self.tmp_dir).load_data(num_workers=int(os.getenv('NUM_WORKERS')))

@@ -1,6 +1,6 @@
 # Prepare patent textual data (needs to be updated according to EPO Bulk Data updates)
 
-cd ../resources/documents
+cd /media/ubuntu/Jourlin2Tb/Corpus/EPO
 unzip *.zip
 rm -f *.zip
 rm -fr DTDS index.html VOLUMEID CONTENTS index.xml
