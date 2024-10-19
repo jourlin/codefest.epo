@@ -69,8 +69,26 @@ xml_extraction_data = [
 ]
 
 class Toolkit:
-    """ Toolkit is the main structure for handling HF embeddings, Ollama, Deeplake & LlamaIndex"""
+    """
+    Toolkit is the main structure for handling HF embeddings, 
+    Ollama, Deeplake & LlamaIndex
+    Note : Docstrings are formatted for pdoc3
+    """
     def __init__(self, read_only=False, index_name="BOTH"):
+        """
+        Initialise a Toolkit object
+
+        Parameters
+        ----------
+            read_only : bool
+                Should we open the indexes only for search or for creating and populating
+            index_name : str
+                "EP" stands for full-text patents, "UMLS" stands for UMLS entities, "BOTH" stands for both indexes
+        Returns
+        -------
+            Toolkit
+                A Toolkit object
+        """
         # import all configuration values from .env file
         self.query=os.getenv('SEARCH_TERM')
         self.model_name=os.getenv('MODEL_NAME')
@@ -133,7 +151,20 @@ class Toolkit:
         print("Initialization completed...",file=sys.stderr)
 
     def get_ai_generated_field(self,text, field):
-        """ Extract a brief description of major strengths of the invention """
+        """
+        Extract a brief description of major strengths of the invention
+
+        Parameters
+        ----------
+            text : str
+                The text to be processed
+            field : str
+                output's field name (e.g. "strength", see ai_generated_prompts global variable)
+        Returns
+        -------
+            str
+                the generated text
+        """
         llm = Ollama(model=self.llm)
         messages=[
             ChatMessage(role="assistant", content="You are an assistant, do what the user tells you to do properly."),
@@ -151,7 +182,22 @@ class Toolkit:
         return content
     
     def retrieve(self, query, query_is_file=False):
-        """ Retrieve patents by performing a K Nearest Neighbours, based on query and patents embeddings """
+        """
+        Retrieve patents by performing a K Nearest Neighbours,
+        based on query and patents embeddings 
+
+        Parameters
+        ----------
+            query : str
+                input text for query search or document similarity search
+            query_is_file : bool
+                Toggle between query search / similarity search
+        Returns
+        -------
+            str
+                a string containing the ranked list 
+                of retrieved documents as a HTML table 
+        """
         if not query_is_file:
             # First expand all UMLS concepts contained in the query
             query = self.expand_query(query)
@@ -222,7 +268,20 @@ class Toolkit:
         return output
 
     def extend(self, query):
-        """ extend() is for UMLS concepts what retrieved() is for patents """
+        """
+        Retrieve UMLS entities by performing a K Nearest Neighbours, 
+        based on query and UMLS embeddings 
+        
+        Parameters
+        ----------
+            query : str
+                query text to be expanded
+        Returns
+        -------
+            str
+                a string that contains an ordered list of 
+                retrieved UMLS concepts as a HTML table
+        """
         store = deeplake.core.vectorstore.deeplake_vectorstore.DeepLakeVectorStore(path=self.umls_vector_dir)
         result = store.search(embedding_data=query, embedding_function=self.embed_model.get_text_embedding, k=self.span_top_k)
         # Get retrieved concept IDs and their contents
@@ -252,13 +311,35 @@ class Toolkit:
         return output
     
     def filter_query(self, query):
-        """ remove concept IDs from query """
+        """
+        remove concept IDs from query 
+
+        Parameters
+        ----------
+            query : str
+                input query text that might contain UMLS entities IDs
+        Returns
+        -------
+            str
+                the filtered query
+        """
         terms=query.split()
         filtered = list(filter(lambda t: not concept_pattern.match(t), terms))
         return " ".join(filtered)
     
     def expand_query(self, query):
-        """ Replace concept IDs in query by their contents"""
+        """
+        Replace concept IDs in query by their contents
+
+        Parameters
+        ----------
+            query : str
+                unexpanded query text
+        Returns
+        -------
+            str
+                the expanded query text
+        """
         terms=query.split()
         # get UMLS concepts from query
         concepts = list(filter(lambda t: concept_pattern.match(t), terms))
@@ -273,7 +354,18 @@ class Toolkit:
         return query
 
     def reindex(self, index_name):
-        """ Load, store, index data as vectors of text spans embedding """
+        """
+        Load, store, index data as vectors of text spans embedding
+
+        Parameters
+        ----------
+            index_name : str
+                "EP" stands for full-text patents, "UMLS" stands for UMLS entities, "BOTH" stands for both indexes
+        Returns
+        -------
+            None
+                nothing
+        """
         # Indexing patents
         if index_name in ["EP", "BOTH"]:
             print(f"Reindexing '{self.query}'...")
@@ -333,11 +425,24 @@ class Toolkit:
             print("Error : Invalid index name. Choose 'EP' for patents or 'UMLS' for concepts", file=sys.stderr)
 
     def patchat(self, question):
-        """ Start the chatbot in streaming mode """
+        """
+        Start the chatbot in streaming mode
+
+        Parameters
+        -----------
+            question : str
+                current prompt
+        Returns
+        -------
+            StreamingAgentChatResponse
+                a stream where token are directed as they are inferred
+                the StreamingAgentChatResponse class is defined in LlamaIndex module
+        """
         # remove concept IDs as their are not helpfull here
         question = self.filter_query(question)
         print(f"Answering '{question}'", file=sys.stderr)
         streaming_response = self.chat_engine.stream_chat(question)
+        print(streaming_response.__class__.__name__)
         return streaming_response
 
 if __name__ == "main":
