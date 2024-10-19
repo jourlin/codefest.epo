@@ -16,9 +16,57 @@ from llama_index.core.memory import ChatMemoryBuffer
 
 # pattern for matching UMLS IDs
 concept_pattern = re.compile("^c[0-9]+$")
+# pattern for SQL-formatted dates
+date_pattern = re.compile("^[0-9]{8}$")
+# Ai generated field names and associated prompts
 ai_generated_prompts = {
     "strengths" : ["Major strengths", "Top 5 major strengths of the following invention. Answer in less than 50 words: "]
 }
+# XML field and how to access them
+xml_extraction_data = [
+    {
+        "name": "id",                               # Application ID
+        "display": "application ID",
+        "path": "//ep-patent-document",
+        "position": 0,
+        "parameter": "id"
+    },
+    {
+        "name": "country",                          # Country (e.g. 'EP')
+        "path": "//ep-patent-document",
+        "position": 0,
+        "parameter": "country"
+    },
+    {
+        "name": "doc-number",                       # ID (e.g. '3496680')
+        "path": "//ep-patent-document",
+        "position": 0,
+        "parameter": "doc-number"
+    },
+    {
+        "name": "kind",                             # Country (e.g. 'B1')
+        "path": "//ep-patent-document",
+        "position": 0,
+        "parameter": "kind"
+    },
+    {
+        "name": "patent_id",                        # Patent ID 'built from country+doc-number+kind
+        "display": "Patent ID",
+    },
+    {
+        "name": "category",                         # Invention category
+        "display": "Classification CPC",
+        "path": "//B540/B542/text()",
+        "position": 1,
+    },
+    {
+        "name": "date",                             # Publication date
+        "display": "Published on",
+        "path": "//ep-patent-document",
+        "position": 0,
+        "parameter": "date-publ"
+    }
+]
 
 class Toolkit:
     """ Toolkit is the main structure for handling HF embeddings, Ollama, Deeplake & LlamaIndex"""
@@ -41,22 +89,27 @@ class Toolkit:
         self.table_cells_maxchars=int(os.getenv('TABLE_CELLS_MAXCHARS'))
         self.span_top_k = int(os.getenv('SPAN_TOPK'))
         print("Initializing toolkit...",file=sys.stderr)
+        # Get embedding model (used to build vectors from queries and document spans) from HF
         self.embed_model = HuggingFaceEmbedding(
             model_name=self.model_name
         )
         Settings.embed_model = self.embed_model
-        # ollama
+        # Tell LlamaIndex to call Ollama for interacting with LLM (e.g. Llama3)
         self.llm_settings = Ollama(model=self.llm, request_timeout=self.llm_req_timeout)
         Settings.llm = self.llm_settings
         accepted_names = ["UMLS", "EP", "BOTH"]
+        # Select one of the available index
+        # Check index name validity
         if index_name not in accepted_names:
             print(f"Error: '{index_name}' is not a valid index name. Accepted values : {accepted_names}", file=sys.stderr)
             sys.exit(-1)
+        # Select UMLS entities
         if index_name=="UMLS" or index_name=="BOTH":
             # Configure deeplake for UMLS
             self.umls_vector_store = DeepLakeVectorStore(dataset_path=self.umls_vector_dir)
             self.umls_index = VectorStoreIndex.from_vector_store(vector_store=self.umls_vector_store, streaming=True, read_only=read_only)
             self.umls_storage_context = StorageContext.from_defaults(vector_store=self.umls_vector_store)
+        # Select EPO full-text patents
         if index_name=="EP" or index_name=="BOTH": 
             # Configure deeplake for patents
             self.vector_store = DeepLakeVectorStore(dataset_path=self.vector_dir)
@@ -86,12 +139,15 @@ class Toolkit:
             ChatMessage(role="assistant", content="You are an assistant, do what the user tells you to do properly."),
             ChatMessage(role="user", content=ai_generated_prompts[field][1]+text)
         ]
+        # start llm inference
         resp = llm.chat(messages)
         content = None
+        # parse the LLM output
         for item in resp:
             if isinstance(item, tuple) and item[0] == 'message':
                 content = item[1].content
                 break
+        # return LLM output
         return content
     
     def retrieve(self, query, query_is_file=False):
@@ -99,15 +155,18 @@ class Toolkit:
         if not query_is_file:
             # First expand all UMLS concepts contained in the query
             query = self.expand_query(query)
-        
         # LLama Index does not provide the search() method for its embedded Deeplake stores, so : 
         store = deeplake.core.vectorstore.deeplake_vectorstore.DeepLakeVectorStore(path=self.vector_dir)
         result = store.search(embedding_data=query, embedding_function=self.embed_model.get_text_embedding, k=self.span_top_k)
         # Get retrieved filenames from Deeplake results
         docname_list ={result['metadata'][offset]['file_path'] for offset in range(0, len(result['metadata']))}
-        #strengths_list = [result['metadata'][offset]['strengths'] for offset in range(0, len(result['metadata']))]
         # Render results as a HTML table
-        output="<table><tr><th>select</th><th>ID</th><th>Published</th><th>Classification CPC</th>"
+        output="<table><tr><th>select</th>"
+        # Column names for XML fields
+        for field in xml_extraction_data:
+            if "display" in field:
+                output+=f"<th>{field['display']}</th>"
+        # Column names for AI generated fields    
         for field in ai_generated_prompts.keys():
             output+=f"<th>✨{ai_generated_prompts[field][0]} (AI generated)</th>"
         output+="</tr>\n"
@@ -117,16 +176,43 @@ class Toolkit:
                 root=ET.parse(doc).getroot()
             except:
                 continue
-            id=root.xpath('//ep-patent-document')[0].get('id')
-            date=root.xpath('//ep-patent-document')[0].get('date-publ')
-            year=date[:4]
-            month=date[4:6]
-            day=date[6:8]
-            date = day+'/'+month+"/"+year
-            category=root.xpath('//B540/B542/text()')[1]
+            # extract XML fields values
+            patent_id="?"
+            application_id="?"
+            for field in xml_extraction_data:
+                # Value is a parameter value within the Nth result of a xpath query
+                if "position" in field and "parameter" in field:
+                    field["value"]=root.xpath(field["path"])[field["position"]].get(field["parameter"])
+                # Value is the Nth result of a xpath query
+                elif "position" in field:
+                    field["value"]=root.xpath(field["path"])[field["position"]]
+                if field["name"]=="date" and date_pattern.match(field["value"]): # Format "20241018" dates as "18/10/2024"
+                    year=field["value"][:4]
+                    month=field["value"][4:6]
+                    day=field["value"][6:8]
+                    field["value"]=day+'/'+month+"/"+year
+                # Build patent id as country+doc_number+kind
+                if field["name"]=="country":
+                    patent_id=field["value"]
+                if field["name"] == "doc-number":
+                    patent_id+=field["value"]
+                    doc_number=field["value"]
+                if field["name"] == "kind":
+                    patent_id+=field["value"]                    
+                if field["name"]=="patent_id":
+                    field["value"]=patent_id
+                if field["name"]=="id":
+                    application_id=field["value"]
             output+='<tr>'
-            output+="<td>"+'<input type="checkbox" id="'+id+'" onchange="append_query(this)" ></td>'
-            output+='<td><a href="/download/'+os.path.basename(doc).strip(".xml")+'.pdf"'+f">{id}</a></td><td>{date}</td><td>{category}</td>"
+            output+="<td>"+'<input type="checkbox" id="'+application_id+'" onchange="append_query(this)" ></td>'
+            output+='<td><a href="/download/'+os.path.basename(doc).strip(".xml")+'.pdf"'
+            # output of XML fields
+            for field in xml_extraction_data:
+                if field["name"]=="id":
+                    output+=f">{field["value"]}</a></td>"
+                elif "display" in field:
+                    output+=f"<td>{field["value"]}</td>"
+            # output of AI generated fields
             for field in ai_generated_prompts.keys():
                 with open(doc.strip(".xml")+"."+field+'.html', "r") as file:
                     content = file.read()
@@ -174,9 +260,12 @@ class Toolkit:
     def expand_query(self, query):
         """ Replace concept IDs in query by their contents"""
         terms=query.split()
+        # get UMLS concepts from query
         concepts = list(filter(lambda t: concept_pattern.match(t), terms))
+        # remove UMLS concepts from query
         filtered = list(filter(lambda t: not concept_pattern.match(t), terms))
         query = " ".join(filtered)
+        # do query expansion
         for concept in concepts:
             with open(self.umls_document_dir+"/"+concept[:4]+"/"+concept+".txt") as f:
                 content = f.readlines()
@@ -188,17 +277,19 @@ class Toolkit:
         # Indexing patents
         if index_name in ["EP", "BOTH"]:
             print(f"Reindexing '{self.query}'...")
+            # Find in all files those that contains the filter keywords
             file_list = os.popen("grep -i -l '"+self.query+"' "+self.document_dir+"/*.xml").read()
             file_list = file_list.splitlines()
             print(f"Found {len(file_list)} publications containing the following term: '{self.query}'")
             nb_docs = min(self.doc_limit, len(file_list))
             print(f"Storing {nb_docs} patents embeddings to disk...")
+            # Clean up temporary document directory
             os.system("rm -fr "+self.tmp_dir)
             os.system("mkdir -p "+self.tmp_dir)
+            # Copy all files that contain search keywords to temporary document directory
             for fn in tqdm(file_list):
                 if len(fn)>0:
                     os.system("cp "+fn+" "+self.tmp_dir)
-                    # os.system("cp "+fn.strip(".xml")+".pdf "+self.tmp_dir)
             # Load documents and build index
             print("loading data...")
             documents = SimpleDirectoryReader(self.tmp_dir).load_data(num_workers=int(os.getenv('NUM_WORKERS')))
@@ -206,6 +297,9 @@ class Toolkit:
             for doc in tqdm(documents):
                 # parse xml file
                 root=ET.fromstring(bytes(doc.text, encoding='utf8'))
+                # Build patent ID as country+doc_number+kind and append as a tag to document
+                pd=root.xpath("//ep-patent-document")[0]
+                doc.metadata["patent id"]=pd.get("country")+pd.get("doc-number")+pd.get("kind")
                 # Extract AI generated files
                 for field in ai_generated_prompts.keys():
                     filename = doc.metadata["file_path"].strip(".xml")+'.'+field+'.html'
@@ -247,4 +341,4 @@ class Toolkit:
         return streaming_response
 
 if __name__ == "main":
-    print("Coucouc")
+    print("This toolkit should be called by app.py")
